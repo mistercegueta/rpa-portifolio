@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta content="#080b14" name="theme-color"/>
+<meta content="Portfólio de Brandon Saraiva: RPA, automação de processos, web scraping, bots e engenharia de dados. Projetos acadêmicos e aplicações." name="description"/>
+<meta content="website" property="og:type"/>
+<meta content="Brandon Saraiva | RPA &amp; Automation Engineer" property="og:title"/>
+<meta content="Projetos acadêmicos e aplicações em automação de processos, RPA e engenharia de dados." property="og:description"/>
+<meta content="dark" name="color-scheme"/>
+<title>Brandon Saraiva | RPA &amp; Automation Engineer</title>
+<link href="./assets/favicon.svg" rel="icon" type="image/svg+xml"/>
+<link href="./site.webmanifest" rel="manifest"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="./css/styles.css" rel="stylesheet"/>
+<script defer="" src="./js/projects.js"></script>
+<script defer="" src="./js/i18n.js"></script><script defer="" src="./js/app.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#conteudo">Ir para conteúdo</a>
+<div aria-hidden="true" class="ambient-grid"></div><canvas aria-hidden="true" class="gravity-canvas" id="gravityCanvas"></canvas>
+<div aria-hidden="true" class="grain"></div>
+<div aria-hidden="true" class="scroll-progress" id="scrollProgress"></div>
+<header class="site-header" id="siteHeader">
+<div class="nav-inner container">
+<a aria-label="Brandon Saraiva, voltar ao início" class="brand" href="#inicio">
+<span aria-hidden="true" class="brand-icon"><span>B</span><span class="brand-slash">/</span><span>S</span></span>
+<span class="brand-type">BRANDON<span class="brand-line">_</span>SARAIVA <small>automation.engineer</small></span>
+</a>
+<nav aria-label="Navegação principal" class="desktop-nav">
+<a href="#especialidades">Expertise</a>
+<a href="#projetos">Projetos</a>
+<a href="#laboratorio">Automation lab</a>
+<a href="#trajetoria">Trajetória</a>
+</nav>
+<button aria-label="Switch to English" class="language-switch" id="languageSwitch" title="Switch to English" type="button">
+<svg aria-hidden="true" class="globe-icon" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.65" viewbox="0 0 24 24"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 2.6 4.5 5.7 4.5 9s-1.5 6.4-4.5 9C9 18.4 7.5 15.3 7.5 12S9 5.6 12 3Z"></path></svg>
+<span class="language-current" id="languageCurrent">PT</span><span class="language-arrow">⇄</span><span class="language-next" id="languageNext">EN</span>
+</button><a class="header-contact" href="#contato"><span class="live-dot"></span> Contato <span aria-hidden="true">↗</span></a>
+<button aria-controls="mobileNav" aria-expanded="false" aria-label="Abrir menu" class="mobile-toggle" id="mobileToggle" type="button"><span></span><span></span><span></span></button>
+</div>
+<nav aria-label="Navegação mobile" class="mobile-nav" hidden="" id="mobileNav">
+<a href="#especialidades">Expertise</a>
+<a href="#projetos">Projetos</a>
+<a href="#laboratorio">Automation lab</a>
+<a href="#trajetoria">Trajetória</a>
+<a href="#contato">Contato</a>
+</nav>
+</header>
+<main id="conteudo">
+<section aria-labelledby="heroTitle" class="hero container" id="inicio">
+<div aria-hidden="true" class="hero-glow hero-glow-a"></div>
+<div aria-hidden="true" class="hero-glow hero-glow-b"></div>
+<div class="hero-copy">
+<div class="eyebrow"><span class="eyebrow-line"></span> SOFTWARE &amp; PROCESS AUTOMATION <span class="eyebrow-num">// 2026</span></div>
+<div class="hero-flag"><span class="live-dot"></span> SYSTEM ONLINE <span class="hero-flag-separator">/</span> PORTFÓLIO DE RPA</div>
+<h1 id="heroTitle">Automação de processos, <span class="display-outline">RPA</span> e engenharia de dados<span class="period">.</span></h1>
+<p class="hero-description">Sou <strong>Brandon Saraiva</strong>, desenvolvedor focado em automação de processos, integrações e engenharia de dados. Aqui reúno trabalhos da faculdade, projetos aplicados e experimentos que venho construindo.</p>
+<div class="hero-actions">
+<a class="button button-primary" href="#projetos"><span>Explorar meus projetos</span><span aria-hidden="true" class="button-icon">↗</span></a>
+<a class="button button-ghost" href="#laboratorio"><span aria-hidden="true" class="play-mini">▶</span> Ver automação em ação</a>
+</div>
+<div aria-label="Áreas de atuação" class="hero-chips"><span>RPA</span><span>PYTHON</span><span>WEB SCRAPING</span><span>DATA PIPELINES</span></div>
+</div>
+<div aria-label="Representação animada de um fluxo automatizado com etapas de entrada, processamento e entrega" class="hero-visual">
+<div class="visual-topline"><span><span class="visual-eye"></span> VISUAL ENGINE / 001</span><span class="visual-clock" id="liveClock">00:00:00</span></div>
+<div class="visual-surface">
+<canvas aria-hidden="true" class="network-canvas" id="networkCanvas"></canvas>
+<div class="flow-diagram">
+<svg aria-hidden="true" class="circuit-paths" preserveaspectratio="none" viewbox="0 0 500 440">
+<defs><lineargradient id="flowGradient" x1="0" x2="1"><stop offset="0" stop-color="#9567ff"></stop><stop offset="1" stop-color="#65f0d2"></stop></lineargradient></defs>
+<path class="wire wire-a" d="M150 105 H250 V205"></path>
+<path class="wire wire-b" d="M350 105 H250 V205"></path>
+<path class="wire wire-c" d="M250 235 V330 H150"></path>
+<path class="wire wire-d" d="M250 235 V330 H350"></path>
+<path class="wire-moving wire-a" d="M150 105 H250 V205"></path>
+<path class="wire-moving wire-b" d="M350 105 H250 V205"></path>
+<path class="wire-moving wire-c" d="M250 235 V330 H150"></path>
+<path class="wire-moving wire-d" d="M250 235 V330 H350"></path>
+</svg>
+<div class="flow-node node-top-left"><span class="node-symbol">⌗</span><span>01 / INPUT</span><strong>CAPTURA</strong><small>web · APIs</small></div>
+<div class="flow-node node-top-right"><span class="node-symbol">◇</span><span>02 / ENGINE</span><strong>EXTRAÇÃO</strong><small>bots · scraping</small></div>
+<div class="flow-core"><span class="flow-orbit orbit-one"></span><span class="flow-orbit orbit-two"></span><span class="core-text"><strong>RPA</strong><small>ENGINE</small></span></div>
+<div class="flow-node node-bottom-left"><span class="node-symbol">≡</span><span>03 / LOGIC</span><strong>VALIDAÇÃO</strong><small>regras · dados</small></div>
+<div class="flow-node node-bottom-right"><span class="node-symbol">↗</span><span>04 / OUTPUT</span><strong>ENTREGA</strong><small>CSV · relatórios</small></div>
+</div>
+</div>
+<div class="visual-console"><span class="console-prompt">&gt;_</span><span aria-live="off" class="console-output" id="heroConsole">workflow.execute() → aguardando eventos</span><span class="console-cursor"></span></div>
+<div class="visual-bottom"><span><span class="tiny-square"></span> SIMULATED WORKFLOW</span><span class="visual-signal">●   VISUAL DEMO</span></div>
+<span aria-hidden="true" class="visual-corner corner-tl"></span><span aria-hidden="true" class="visual-corner corner-tr"></span><span aria-hidden="true" class="visual-corner corner-bl"></span><span aria-hidden="true" class="visual-corner corner-br"></span>
+</div>
+<div class="hero-bottom"><div><span class="hero-bottom-index">01 /</span> PROJETOS, CÓDIGO E EXPERIMENTOS</div><div class="hero-scroll">ROLE PARA EXPLORAR <span class="scroll-icon">↓</span></div></div>
+</section>
+<div aria-label="Tecnologias e especialidades" class="ticker"><div aria-hidden="true" class="ticker-track"><span>ROBOTIC PROCESS AUTOMATION</span><b>✳</b><span>PYTHON DEVELOPMENT</span><b>✳</b><span>WEB SCRAPING</span><b>✳</b><span>DATA ENGINEERING</span><b>✳</b><span>PROCESS INTELLIGENCE</span><b>✳</b><span>ROBOTIC PROCESS AUTOMATION</span><b>✳</b><span>PYTHON DEVELOPMENT</span><b>✳</b><span>WEB SCRAPING</span><b>✳</b><span>DATA ENGINEERING</span><b>✳</b><span>PROCESS INTELLIGENCE</span><b>✳</b></div></div>
+<section aria-labelledby="expertiseTitle" class="section section-expertise container" id="especialidades">
+<div class="section-heading" data-reveal=""><div class="section-kicker"><span class="section-number">01/</span> O QUE EU FAÇO</div><div class="heading-split"><h2 id="expertiseTitle">Tecnologias que <span>utilizo.</span></h2><p>Trabalho com ferramentas de automação, coleta e processamento de dados, integração de sistemas e modelagem de processos.</p></div></div>
+<div class="expertise-grid">
+<article class="expertise-card" data-reveal=""><div class="expertise-card-head"><span class="card-index">SYS.01</span><span class="expertise-icon">⌘</span></div><div aria-hidden="true" class="expertise-illustration robot-illustration"><span class="illustration-grid"></span><span class="robot-body"><span class="robot-eye"></span><span class="robot-eye"></span><span class="robot-mouth"></span></span><span class="robot-arm robot-arm-left"></span><span class="robot-arm robot-arm-right"></span><span class="orbit-label orbit-a">BOT_01</span><span class="orbit-label orbit-b">ACTIVE</span></div><h3>RPA &amp; Bots</h3><p>Rotinas que navegam, clicam, extraem, validam e executam tarefas com regras definidas.</p><div class="expertise-tags"><span>Python</span><span>PyAutoGUI</span><span>Selenium</span></div></article>
+<article class="expertise-card" data-reveal=""><div class="expertise-card-head"><span class="card-index">SYS.02</span><span class="expertise-icon">⌁</span></div><div aria-hidden="true" class="expertise-illustration pipeline-illustration"><div class="pipe-column"><span></span><span></span><span></span></div><div class="pipe-line"><i></i><i></i><i></i></div><div class="pipe-database"><span></span><span></span></div><span class="orbit-label pipe-label">DATA_FLOW: OK</span></div><h3>Web Scraping &amp; ETL</h3><p>Extração, transformação e integração de informação, da web até bases estruturadas.</p><div class="expertise-tags"><span>Scraping</span><span>Elastic</span><span>APIs</span></div></article>
+<article class="expertise-card" data-reveal=""><div class="expertise-card-head"><span class="card-index">SYS.03</span><span class="expertise-icon">◇</span></div><div aria-hidden="true" class="expertise-illustration workflow-illustration"><span class="wf-node wf-one">01</span><span class="wf-route wf-route-one"></span><span class="wf-node wf-two">02</span><span class="wf-route wf-route-two"></span><span class="wf-node wf-three">✓</span><span class="orbit-label wf-label">PROCESS_COMPLETE</span></div><h3>Processos &amp; Integrações</h3><p>Modelagem e otimização de fluxos, conectando etapas, sistemas e decisões.</p><div class="expertise-tags"><span>BPMN</span><span>APIs</span><span>Dados</span></div></article>
+</div>
+</section>
+<section aria-labelledby="projectsTitle" class="section section-projects" id="projetos">
+<div class="container">
+<div class="section-heading" data-reveal=""><div class="section-kicker"><span class="section-number">02/</span> REPOSITÓRIOS &amp; HISTÓRICO</div><div class="heading-split"><h2 id="projectsTitle">Projetos por <span>fase.</span></h2><p>Separei a produção acadêmica das aplicações em outros contextos. A vitrine consulta os repositórios públicos no GitHub e inclui novas automações identificadas por seus metadados.</p></div></div>
+<div aria-label="Filtrar projetos por período" class="era-switch" role="group">
+<button aria-pressed="true" class="era-button active" data-era-filter="ambas" type="button"><span class="era-switch-icon">◈</span> Duas eras</button>
+<button aria-pressed="false" class="era-button" data-era-filter="aplicada" type="button">02 / Aplicações</button>
+<button aria-pressed="false" class="era-button" data-era-filter="academica" type="button">01 / Faculdade</button>
+</div><div class="project-tools" data-reveal=""><div aria-label="Filtrar projetos por especialidade" class="filter-list" role="group"><button aria-pressed="true" class="filter active" data-filter="todos" type="button">Todos <span id="allCount">06</span></button><button aria-pressed="false" class="filter" data-filter="bots" type="button">Bots &amp; RPA</button><button aria-pressed="false" class="filter" data-filter="web" type="button">Web scraping</button><button aria-pressed="false" class="filter" data-filter="dados" type="button">Data &amp; ETL</button><button aria-pressed="false" class="filter" data-filter="fluxos" type="button">Workflows</button></div><label class="project-search"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar projetos</span><input autocomplete="off" id="projectSearch" placeholder="Buscar projeto ou tecnologia..." type="search"/></label></div>
+<div class="project-meta"><span id="projectSource"><span class="meta-dot"></span> CURADORIA LOCAL ATIVA</span><span aria-live="polite" id="projectResult" role="status">06 projetos encontrados</span></div>
+<div class="era-sections" id="eraSections">
+<section aria-labelledby="eraAppliedTitle" class="projects-era projects-era-applied" data-era="aplicada">
+<div class="era-heading"><div aria-hidden="true" class="era-orbit"><span>02</span></div><div class="era-heading-main"><span class="era-eyebrow">ERA 02 / APLICAÇÕES</span><h3 id="eraAppliedTitle">Aplicações &amp; pesquisa</h3><p>Automações desenvolvidas em experiências de trabalho, pesquisas independentes e projetos mais recentes.</p></div><span class="era-counter" id="appliedCount">00 PROJETOS</span></div>
+<div class="project-grid" id="appliedGrid"></div></section>
+<section aria-labelledby="eraAcademicTitle" class="projects-era projects-era-academic" data-era="academica">
+<div class="era-heading"><div aria-hidden="true" class="era-orbit"><span>01</span></div><div class="era-heading-main"><span class="era-eyebrow">ERA 01 / FORMAÇÃO</span><h3 id="eraAcademicTitle">Laboratório acadêmico</h3><p>Experimentos e projetos de automação desenvolvidos durante a faculdade, com foco em aprender e testar ferramentas.</p></div><span class="era-counter" id="academicCount">00 PROJETOS</span></div>
+<div class="project-grid" id="academicGrid"></div></section></div>
+<div class="empty-state" hidden="" id="projectEmpty"><span>NO_MATCH.EXE</span><h3>Nenhum projeto encontrado</h3><p>Tente outra busca ou selecione “Todos”.</p><button class="button button-ghost" id="resetFilters" type="button">Limpar filtros ↗</button></div>
+<div class="projects-footer"><span>REPOSITÓRIOS PÚBLICOS • <span id="projectSyncText">Projetos selecionados</span></span><a class="text-link" href="https://github.com/BrandonSaraiva?tab=repositories" rel="noopener noreferrer" target="_blank">Explorar GitHub completo <span aria-hidden="true">↗</span></a></div>
+</div>
+</section>
+<section aria-labelledby="labTitle" class="section section-lab container" id="laboratorio">
+<div class="section-heading" data-reveal=""><div class="section-kicker"><span class="section-number">03/</span> AUTOMATION PLAYGROUND</div><div class="heading-split"><h2 id="labTitle">Catálogo em <span>CSV.</span></h2><p>O laboratório consulta os repositórios públicos, organiza os metadados e exporta um inventário atualizado dos projetos de automação exibidos no site.</p></div></div>
+<div class="lab-layout" data-reveal="">
+<div class="lab-intro"><div aria-hidden="true" class="lab-icon">⌘</div><div class="lab-serial">DEMO_001 <span>/</span> CLIENT-SIDE ENGINE</div><h3>Do GitHub<br/><em>ao CSV.</em></h3><p>Quando você executar, o site tentará consultar novamente a API do GitHub e reunirá datas de criação e atualização, tecnologias, categorias, temas, links e outros metadados disponíveis. Funciona também sem conexão, usando o catálogo local.</p><div class="lab-commands"><span><b>01</b> Consultar GitHub</span><span><b>02</b> Identificar automações</span><span><b>03</b> Organizar metadados</span><span><b>04</b> Gerar inventário CSV</span></div><div class="lab-actions"><button class="button button-primary" id="runDemo" type="button"><span id="runDemoLabel">▶   Executar fluxo</span><span aria-hidden="true" class="button-icon">↗</span></button><button class="button button-ghost" disabled="" id="downloadCsv" type="button">↓ Baixar CSV</button></div><p class="lab-disclaimer">* Dados obtidos de repositórios públicos. Se a API estiver indisponível, o CSV identifica os itens provenientes da curadoria local.</p></div>
+<div aria-label="Terminal de demonstração de automação" class="terminal" role="region"><div class="terminal-titlebar"><span class="terminal-dots"><i></i><i></i><i></i></span><span>brandon@rpa-engine: ~/portfolio</span><span>⌘</span></div><div class="terminal-body"><div class="terminal-path"><span class="terminal-purple">brandon@rpa-engine</span>:<span class="terminal-cyan">~/portfolio</span>$ node catalog-export.js</div><div aria-hidden="true" class="terminal-ascii">┌───────────────────────────────────────┐
+│    <span>B / S    REPOSITORY INVENTORY</span>       │
+│    GITHUB → CLASSIFY → CSV            │
+└───────────────────────────────────────┘</div><div class="terminal-status">&gt; ESTADO: <strong id="demoState">AGUARDANDO EXECUÇÃO</strong></div><div aria-label="Etapas do processamento" class="terminal-stages" id="demoStages"><div class="terminal-stage" data-stage="0"><span>01</span> FETCH</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="1"><span>02</span> FILTER</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="2"><span>03</span> ENRICH</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="3"><span>04</span> CSV</div></div><div aria-live="polite" aria-relevant="additions" class="terminal-log" id="demoLog" role="log"><div class="log-entry"><span class="log-time">[READY]</span> Clique para consultar os projetos e gerar o inventário.</div></div><div class="terminal-metrics"><div><span>REPOSITÓRIOS</span><strong id="metricInput">--</strong></div><div><span>AUTOMAÇÕES</span><strong id="metricValid">--</strong></div><div><span>CSV / LINHAS</span><strong id="metricOutput">--</strong></div></div></div><div class="terminal-footer"><span id="demoProgressLabel">AWAITING_INPUT</span><span>SECURE LOCAL PROCESS // <span id="demoProgress">00%</span></span></div></div>
+</div>
+</section>
+<section aria-labelledby="timelineTitle" class="section section-timeline" id="trajetoria"><div class="container timeline-layout"><div class="timeline-intro" data-reveal=""><div class="section-kicker"><span class="section-number">04/</span> MINHA JORNADA</div><h2 id="timelineTitle">Minha <span>trajetória.</span></h2><p>Experiência em automação, coleta de dados e desenvolvimento, desde a formação no IESB até a atuação em instituições públicas.</p><a class="text-link" href="https://www.linkedin.com/in/brandon-saraiva-006a4823b/" rel="noopener noreferrer" target="_blank">Trajetória completa no LinkedIn ↗</a></div><div class="timeline-list" data-reveal="">
+<article class="timeline-item current"><div class="timeline-year">2026 — ATUAL</div><div><div class="timeline-job-head"><h3>Analista de Pesquisa e Prospecção Tecnológica</h3><span class="timeline-current">ATUAL</span></div><p class="timeline-company">ANPD · Agência Nacional de Proteção de Dados</p><p>Desenvolvimento e aprimoramento de automações para coleta e sistematização de dados acadêmicos, além de pesquisa tecnológica, estudos e modelagem de processos BPMN.</p><div class="timeline-skills"><span>RPA</span><span>Extração de dados</span><span>BPMN</span></div></div></article>
+<article class="timeline-item"><div class="timeline-year">2023 — 2025</div><div><h3>Automation Developer / Data Engineer</h3><p class="timeline-company">ANAC · Agência Nacional de Aviação Civil</p><p>Coleta, web scraping, processamento e integração de dados em Elasticsearch com bibliotecas Python.</p><div class="timeline-skills"><span>Python</span><span>Web scraping</span><span>Elasticsearch</span></div></div></article>
+<article class="timeline-item"><div class="timeline-year">2022 — 2024</div><div><h3>Junior Developer</h3><p class="timeline-company">LightBase · Serviços e Consultoria em Software Público</p><p>Desenvolvimento frontend com React e backend com TypeScript, além da criação e integração de APIs.</p><div class="timeline-skills"><span>React</span><span>TypeScript</span><span>APIs</span></div></div></article>
+<article class="timeline-item timeline-education"><div class="timeline-year">2022 — 2025</div><div><h3>Big Data e Inteligência Analítica</h3><p class="timeline-company">IESB · Formação superior tecnológica</p><p>Base acadêmica em engenharia, análise e tratamento de dados para soluções automatizadas.</p></div></article>
+</div></div></section>
+<section aria-labelledby="stackTitle" class="section section-stack container" id="stack"><div class="stack-panel" data-reveal=""><div class="stack-head"><div><div class="section-kicker"><span class="section-number">05/</span> FERRAMENTAS DO OFÍCIO</div><h2 id="stackTitle">Meu <span>toolkit_</span></h2></div><span aria-hidden="true" class="stack-decoration">{ tools: true }</span></div><div class="stack-grid"><div class="stack-group"><h3>01 / AUTOMAÇÃO</h3><div class="skill-cloud"><span>Python</span><span>Selenium</span><span>PyAutoGUI</span><span>Beautiful Soup</span><span>Web scraping</span></div></div><div class="stack-group"><h3>02 / DADOS &amp; PROCESSOS</h3><div class="skill-cloud"><span>ETL</span><span>Elasticsearch</span><span>SQL</span><span>BPMN</span><span>APIs</span><span>Data pipelines</span></div></div><div class="stack-group"><h3>03 / DESENVOLVIMENTO</h3><div class="skill-cloud"><span>JavaScript</span><span>TypeScript</span><span>React</span><span>Node.js</span><span>Git</span><span>MySQL</span></div></div></div></div></section>
+<section aria-labelledby="contactTitle" class="section section-contact" id="contato"><div aria-hidden="true" class="contact-neon"></div><div class="container contact-content" data-reveal=""><div class="section-kicker"><span class="section-number">06/</span> CONTATO</div><div class="contact-overline"><span class="live-dot"></span> CONTATO PROFISSIONAL</div><h2 id="contactTitle">Entre em <span>contato.</span></h2><p>Para propostas de trabalho, parcerias técnicas ou oportunidades em RPA, automação de processos e engenharia de dados, utilize os canais abaixo.</p><div class="contact-actions"><a class="button button-contact" href="mailto:trabalhobrandon@gmail.com?subject=Contato%20profissional%20%7C%20Portf%C3%B3lio%20Brandon%20Saraiva"><span>Enviar e-mail</span><span aria-hidden="true" class="button-icon">↗</span></a><a class="contact-link" href="https://www.linkedin.com/in/brandon-saraiva-006a4823b/" rel="noopener noreferrer" target="_blank">LinkedIn ↗</a><a class="contact-link" href="https://github.com/BrandonSaraiva" rel="noopener noreferrer" target="_blank">GitHub ↗</a></div><div class="contact-email">trabalhobrandon@gmail.com</div></div></section>
+</main>
+<footer class="site-footer"><div class="container footer-inner"><a class="footer-brand" href="#inicio">B/S<span>_</span></a><span>RPA / AUTOMAÇÃO / DADOS</span><span>© <span id="copyrightYear">2026</span> BRANDON SARAIVA</span><a class="footer-top" href="#inicio">VOLTAR AO TOPO ↑</a></div></footer>
+<noscript><div class="noscript-note">Este site usa JavaScript para exibir o catálogo interativo e a demonstração. Consulte os projetos em <a href="https://github.com/BrandonSaraiva">github.com/BrandonSaraiva</a>.</div></noscript>
+</body>
+</html>
