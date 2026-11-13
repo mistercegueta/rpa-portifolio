@@ -379,10 +379,21 @@
           if (part.length < 100) break;
         }
         const known = new Map(repos.map(repo => [repo.name.toLowerCase(), repo]));
-        const curatedWithMetadata = curated.map(p => {
-          const remote = known.get(p.repo.toLowerCase());
-          return remote ? { ...p, meta: extractMeta(remote) } : { ...p };
-        });
+
+const curatedWithMetadata = curated.map(p => {
+  const remote = known.get(p.repo.toLowerCase());
+
+  if (!remote) {
+    return { ...p };
+  }
+
+  return {
+    ...p,
+    meta: extractMeta(remote),
+    originalDescription: remote.description ?? ''
+  };
+});
+
         const curatedNames = new Set(curated.map(p => p.repo.toLowerCase()));
         const discovered = repos.filter(isAutomationRepo)
           .filter(r => !curatedNames.has(r.name.toLowerCase())).map(fromGitHub);
