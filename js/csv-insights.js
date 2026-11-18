@@ -7,7 +7,7 @@
   const $all = (query, parent = dialog) => Array.from(parent.querySelectorAll(query));
   const state = {
     rows: [], file: '', latestCsv: '', category: 'all', era: 'all',
-    source: 'all', tech: '', search: '', year: null, yearKind: 'pushed'
+    source: 'all', tech: '', search: ''
   };
   let lastFocus = null;
   let language = document.documentElement.lang.toLowerCase().startsWith('en') ? 'en' : 'pt';
@@ -258,7 +258,6 @@
     if (except !== 'era' && state.era !== 'all' && row.era !== state.era) return false;
     if (except !== 'source' && state.source !== 'all' && row.source !== state.source) return false;
     if (except !== 'tech' && state.tech && !row.technologies.some(v => norm(v) === norm(state.tech))) return false;
-    if (except !== 'year' && state.year !== null && row[state.yearKind] !== state.year) return false;
     if (state.search && !norm([row.repo, row.title, ...row.technologies].join(' ')).includes(norm(state.search))) return false;
     return true;
   }
@@ -279,12 +278,9 @@
     metric('insightMetricTech', new Set(rows.flatMap(r => r.technologies.map(norm))).size);
     metric('insightMetricPush', rows.filter(r => r.pushed !== null).length);
     $('insightFileLabel').textContent = tr('loaded') + ' ' + state.file + ' · ' + fmt(state.rows.length) + ' ' + tr('rows');
-    const active = [state.category !== 'all', state.era !== 'all', state.source !== 'all', !!state.tech, !!state.search, state.year !== null].some(Boolean);
+    const active = [state.category !== 'all', state.era !== 'all', state.source !== 'all', !!state.tech, !!state.search].some(Boolean);
     $('insightActiveFilter').hidden = !active;
     $('insightClearFilters').disabled = !active;
-    const yr = $('insightYearBadge');
-    yr.hidden = state.year === null;
-    yr.textContent = tr('yearFilter') + ': ' + (state.year ?? '') + ' (' + tr(state.yearKind === 'created' ? 'created' : 'pushed') + ') ×';
   }
   function renderDonut() {
     const base = filtered('category');
@@ -353,45 +349,60 @@
       host.append(button);
     });
   }
-  function renderTimeline() {
-    const host = $('insightTimeline');
+  /* Repository × technology matrix; every dot is backed by a CSV tag. */
+  function renderStackMap() {
+    const host = $('insightStackMap'), summary = $('insightStackSummary');
     host.replaceChildren();
-    const base = filtered('year');
-    const years = [...new Set(base.flatMap(r => [r.created, r.pushed]).filter(v => v !== null))].sort((a, b) => a - b);
-    if (!years.length) { empty(host); return; }
-    const series = years.map(year => ({
-      year, created: base.filter(r => r.created === year).length,
-      pushed: base.filter(r => r.pushed === year).length
+    const all = filtered('tech').slice().sort((a,b) => a.title.localeCompare(b.title));
+    const rows = all.slice(0, 18), counts = new Map();
+    rows.forEach(p => p.technologies.forEach(t => {
+      const key = norm(t), x = counts.get(key);
+      if (x) x.count++;
+      else counts.set(key, {key, title:t, count:1});
     }));
-    const max = Math.max(1, ...series.flatMap(r => [r.created, r.pushed]));
-    const graph = textNode('div', 'insight-timeline-graph');
-    series.forEach(d => {
-      const col = textNode('div', 'insight-timeline-col');
-      const bars = textNode('div', 'insight-timeline-pair');
-      ['created', 'pushed'].forEach(kind => {
-        const b = textNode('button', 'insight-timeline-bar ' + kind);
-        b.type = 'button';
-        b.style.height = Math.max(d[kind] ? 7 : 2, d[kind] / max * 100) + '%';
-        b.title = d.year + ' · ' + tr(kind) + ': ' + d[kind];
-        b.setAttribute('aria-label', b.title);
-        b.setAttribute('aria-pressed', String(state.year === d.year && state.yearKind === kind));
-        b.addEventListener('click', () => {
-          if (state.year === d.year && state.yearKind === kind) state.year = null;
-          else { state.year = d.year; state.yearKind = kind; }
-          render();
-        });
-        bars.append(b);
+    const techs = [...counts.values()].sort((a,b) => b.count-a.count || a.title.localeCompare(b.title));
+    const visible = techs.slice(0,14);
+    if (!rows.length || !visible.length) {
+      empty(host, tr('stackEmpty'));
+      summary.textContent = '';
+      return;
+    }
+    const matrix = textNode('div','insight-stack-matrix');
+    matrix.style.setProperty('--stack-columns',rows.length);
+    matrix.append(textNode('span','insight-stack-corner','STACK / REPOS'));
+    rows.forEach(p => {
+      const url = safeGithubLink(p.url);
+      const node = textNode(url?'a':'span','insight-stack-project',p.title);
+      node.title=p.title;
+      if (url){node.href=url;node.target='_blank';node.rel='noopener noreferrer'}
+      matrix.append(node);
+    });
+    visible.forEach(tech => {
+      const label = textNode('button','insight-stack-technology');
+      label.type='button';
+      label.title=tech.title;
+      label.setAttribute('aria-pressed',String(norm(state.tech)===tech.key));
+      label.append(textNode('span','',tech.title),textNode('small','',fmt(tech.count)));
+      const toggle = () => {state.tech=norm(state.tech)===tech.key?'':tech.title;render()};
+      label.addEventListener('click',toggle);
+      matrix.append(label);
+      rows.forEach(p => {
+        const cell=textNode('span','insight-stack-cell');
+        if (p.technologies.some(t=>norm(t)===tech.key)) {
+          const dot=textNode('button','insight-stack-dot');
+          dot.type='button';
+          dot.title=p.title+' · '+tech.title;
+          dot.style.setProperty('--dot-color',colors[p.category]);
+          dot.setAttribute('aria-label',dot.title);
+          dot.setAttribute('aria-pressed',String(norm(state.tech)===tech.key));
+          dot.addEventListener('click',toggle);
+          cell.append(dot);
+        } else cell.setAttribute('aria-hidden','true');
+        matrix.append(cell);
       });
-      col.append(bars, textNode('span', 'insight-year', String(d.year)));
-      graph.append(col);
     });
-    const key = textNode('div', 'insight-timeline-key');
-    [['created', tr('created')], ['pushed', tr('pushed')]].forEach(([kind, title]) => {
-      const s = textNode('span', '', title);
-      s.prepend(textNode('i', 'insight-key-' + kind));
-      key.append(s);
-    });
-    host.append(graph, key);
+    host.append(matrix);
+    summary.textContent = tr('stackInfo')(rows.length, all.length, visible.length, techs.length);
   }
   function renderMatrix() {
     const host = $('insightMatrix');
@@ -400,7 +411,6 @@
     const rows = state.rows.filter(r => {
       if (state.source !== 'all' && r.source !== state.source) return false;
       if (state.tech && !r.technologies.some(v => norm(v) === norm(state.tech))) return false;
-      if (state.year !== null && r[state.yearKind] !== state.year) return false;
       if (state.search && !norm([r.repo, r.title, ...r.technologies].join(' ')).includes(norm(state.search))) return false;
       return true;
     });
@@ -434,46 +444,6 @@
       const u = new URL(value);
       return u.protocol === 'https:' && u.hostname.toLowerCase() === 'github.com' ? u.href : '';
     } catch { return ''; }
-  }
-
-  function renderCoverage() {
-    const host = $('insightCoverage');
-    host.replaceChildren();
-    const rows = filtered();
-    if (!rows.length) { empty(host); return; }
-    const metrics = [
-      ['created', 'coverageCreated'], ['pushed', 'coveragePushed'],
-      ['stars', 'coverageStars'], ['forks', 'coverageForks'],
-      ['issues', 'coverageIssues'], ['size', 'coverageSize']
-    ];
-    const panel = textNode('div', 'insight-coverage-list');
-    metrics.forEach(([field, label]) => {
-      const available = rows.filter(row => row[field] !== null).length;
-      const line = textNode('div', 'insight-coverage-row');
-      const heading = textNode('div', 'insight-coverage-head');
-      heading.append(textNode('span', '', tr(label)),
-        textNode('strong', '', fmt(available) + '/' + fmt(rows.length)));
-      const track = textNode('span', 'insight-coverage-track');
-      const fill = textNode('i', '');
-      fill.style.width = (100 * available / rows.length).toFixed(2) + '%';
-      track.append(fill);
-      line.append(heading, track);
-      panel.append(line);
-    });
-    const sources = textNode('div', 'insight-source-breakdown');
-    [['api','sourceApi'],['local','sourceLocal'],['outros','sourceOther']].forEach(([type,label]) => {
-      const count = filtered('source').filter(row => row.source === type).length;
-      if (!count) return;
-      const button = textNode('button', 'insight-source-chip', tr(label) + ' · ' + fmt(count));
-      button.type = 'button';
-      button.setAttribute('aria-pressed', String(state.source === type));
-      button.addEventListener('click', () => {
-        state.source = state.source === type ? 'all' : type;
-        render();
-      });
-      sources.append(button);
-    });
-    host.append(panel, sources);
   }
 
   function renderRank() {
@@ -523,10 +493,9 @@
     $('insightNoResults').hidden = selected.length !== 0;
     renderDonut();
     renderTechnologies();
-    renderTimeline();
+    renderStackMap();
     renderMatrix();
     renderRank();
-    renderCoverage();
   }
   function translate() {
     language = document.documentElement.lang.toLowerCase().startsWith('en') ? 'en' : 'pt';
@@ -541,7 +510,7 @@
     if (state.rows.length) render();
   }
   function resetFilters() {
-    Object.assign(state, { category: 'all', era: 'all', source: 'all', tech: '', search: '', year: null, yearKind: 'pushed' });
+    Object.assign(state, { category: 'all', era: 'all', source: 'all', tech: '', search: '' });
     render();
   }
   function loadCsv(csv, file) {
@@ -601,7 +570,6 @@
   $('insightEra').addEventListener('change', event => { state.era = event.target.value; render(); });
   $('insightSource').addEventListener('change', event => { state.source = event.target.value; render(); });
   $('insightSearch').addEventListener('input', event => { state.search = event.target.value; render(); $('insightSearch').focus(); });
-  $('insightYearBadge').addEventListener('click', () => { state.year = null; render(); });
   window.addEventListener('portfolio:inventory-ready', event => {
     if (typeof event.detail?.csv !== 'string') return;
     state.latestCsv = event.detail.csv;
