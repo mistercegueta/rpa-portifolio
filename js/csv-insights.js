@@ -24,7 +24,7 @@
       close: 'Fechar painel', clear: 'Limpar filtros', all: 'Todos',
       filterCat: 'Categoria', filterEra: 'Origem do projeto', filterSource: 'Fonte dos metadados',
       filterSearch: 'Buscar repositório', filterSearchPlaceholder: 'Nome ou tecnologia...',
-      selected: 'Na seleção', api: 'Com API', techs: 'Tecnologias', push: 'Último push informado',
+      selected: 'Repositórios', api: 'Categorias', techs: 'Tecnologias', push: 'Linguagens principais',
       count: 'projetos', donutTitle: 'Projetos por categoria',
       donutNote: 'Distribuição por área de atuação. Selecione uma categoria para filtrar.',
       techTitle: 'Tecnologias mais utilizadas', techNote: 'Quantidade de projetos que utilizam cada tecnologia; repetições dentro do mesmo repositório não são contabilizadas.',
@@ -69,7 +69,7 @@
       close: 'Close dashboard', clear: 'Clear filters', all: 'All',
       filterCat: 'Category', filterEra: 'Project context', filterSource: 'Metadata source',
       filterSearch: 'Search repositories', filterSearchPlaceholder: 'Name or technology...',
-      selected: 'In selection', api: 'API metadata', techs: 'Technologies', push: 'Last push available',
+      selected: 'Repositories', api: 'Categories', techs: 'Technologies', push: 'Primary languages',
       count: 'projects', donutTitle: 'Projects by category',
       donutNote: 'Distribution by field of work. Select a category to filter.',
       techTitle: 'Most used technologies', techNote: 'Number of projects using each technology, counting duplicates in a repository only once.',
@@ -280,9 +280,9 @@
   function metric(id, value) { $(id).textContent = fmt(value); }
   function renderMetrics(rows) {
     metric('insightMetricTotal', rows.length);
-    metric('insightMetricApi', rows.filter(r => r.source === 'api').length);
+    metric('insightMetricApi', new Set(rows.map(r => r.category)).size);
     metric('insightMetricTech', new Set(rows.flatMap(r => r.technologies.map(norm))).size);
-    metric('insightMetricPush', rows.filter(r => r.pushed !== null).length);
+    metric('insightMetricPush', new Set(rows.map(r => norm(r.language)).filter(Boolean)).size);
     $('insightFileLabel').textContent = tr('loaded') + ' ' + state.file + ' · ' + fmt(state.rows.length) + ' ' + tr('rows');
     const active = [state.category !== 'all', state.era !== 'all', state.source !== 'all', !!state.tech, !!state.search].some(Boolean);
     $('insightActiveFilter').hidden = !active;
