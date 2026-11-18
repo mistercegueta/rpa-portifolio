@@ -1,0 +1,29 @@
+name: Verify CSV insights
+
+on:
+  push:
+    paths:
+      - 'js/csv-insights.js'
+      - 'js/projects.js'
+      - 'index.html'
+      - 'tests/csv-insights.test.cjs'
+      - '.github/workflows/verify-insights.yml'
+  pull_request:
+    paths:
+      - 'js/csv-insights.js'
+      - 'js/projects.js'
+      - 'index.html'
+      - 'tests/csv-insights.test.cjs'
+      - '.github/workflows/verify-insights.yml'
+  workflow_dispatch:
+
+jobs:
+  csv-insights:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Test filtered charts and CSV compatibility
+        run: node --test tests/csv-insights.test.cjs
