@@ -27,6 +27,7 @@
       selected: 'Repositórios', api: 'Categorias', techs: 'Tecnologias', push: 'Linguagens principais',
       count: 'projetos', donutTitle: 'Projetos por categoria',
       donutNote: 'Distribuição por área de atuação. Selecione uma categoria para filtrar.',
+      donutSameCategory: (name, count) => count + ' projetos pertencem à categoria ' + name + '. Cada fatia representa um projeto.',
       techTitle: 'Tecnologias mais utilizadas', techNote: 'Quantidade de projetos que utilizam cada tecnologia; repetições dentro do mesmo repositório não são contabilizadas.',
       stackTitle: 'Tecnologias por repositório',
       stackNote: 'Cada ponto indica uma tecnologia presente em um projeto. Selecione a linha para filtrar; o nome do repositório abre o código no GitHub.',
@@ -72,6 +73,7 @@
       selected: 'Repositories', api: 'Categories', techs: 'Technologies', push: 'Primary languages',
       count: 'projects', donutTitle: 'Projects by category',
       donutNote: 'Distribution by field of work. Select a category to filter.',
+      donutSameCategory: (name, count) => count + ' projects belong to ' + name + '. Each segment represents one project.',
       techTitle: 'Most used technologies', techNote: 'Number of projects using each technology, counting duplicates in a repository only once.',
       stackTitle: 'Technologies by repository',
       stackNote: 'Each dot indicates a technology used in a project. Select a row to filter; repository names link to GitHub.',
@@ -298,27 +300,100 @@
     const base = filtered('category');
     const ring = $('insightDonut');
     const legend = $('insightCategoriesLegend');
+    const note = $('insightDonutNote');
     legend.replaceChildren();
-    const counts = Object.fromEntries(cats.map(key => [key, base.filter(row => row.category === key).length]));
+    const counts = Object.fromEntries(cats.map(key => [
+      key, base.filter(row => row.category === key).length
+    ]));
+    const activeCats = cats.filter(key => counts[key] > 0);
     const total = base.length;
-    let offset = 0;
-    const parts = cats.filter(k => counts[k]).map(key => {
-      const from = offset, to = (offset += counts[key] / total * 100);
-      return colors[key] + ' ' + from.toFixed(3) + '% ' + to.toFixed(3) + '%';
-    });
-    ring.style.background = parts.length ? 'conic-gradient(' + parts.join(',') + ')' : '#242b41';
+    const sameCategory = total > 1 && activeCats.length === 1;
+
     $('insightDonutNumber').textContent = fmt(total);
     $('insightDonutCaption').textContent = tr('count');
-    cats.filter(k => counts[k]).forEach(key => {
-      const button = textNode('button', 'insight-legend-item', '');
+    ring.setAttribute('aria-label', sameCategory
+      ? tr('donutSameCategory')(categoryName(activeCats[0]), total)
+      : tr('donutTitle') + ': ' + fmt(total));
+    note.textContent = sameCategory
+      ? tr('donutSameCategory')(categoryName(activeCats[0]), total)
+      : tr('donutNote');
+
+    if (sameCategory) {
+      // Dois projetos na mesma categoria devem parecer duas entidades,
+      // e não uma única rosca de 100% sem nomes identificáveis.
+      const projectColors = [
+        '#a58bff', '#69efce', '#e8c078', '#ecacff',
+        '#839dfa', '#89d6df', '#b6e2aa', '#e49eac'
+      ];
+      const projects = base.slice().sort((x, y) =>
+        x.title.localeCompare(y.title, language === 'en' ? 'en' : 'pt'));
+      const portion = 100 / projects.length;
+      const segments = [];
+      projects.forEach((project, index) => {
+        const from = index * portion;
+        const to = (index + 1) * portion;
+        const boundary = Math.max(from, to - 0.45);
+        segments.push(
+          projectColors[index % projectColors.length] + ' ' + from + '% ' + boundary + '%',
+          '#131728 ' + boundary + '% ' + to + '%'
+        );
+      });
+      ring.style.background = 'conic-gradient(' + segments.join(', ') + ')';
+
+      const categoryRow = textNode('button', 'insight-legend-item insight-legend-category');
+      categoryRow.type = 'button';
+      categoryRow.setAttribute('aria-pressed', String(state.category === activeCats[0]));
+      categoryRow.title = tr('chartTip');
+      const categoryLabel = textNode('span', 'insight-legend-name');
+      const categorySwatch = textNode('i', 'insight-swatch');
+      categorySwatch.style.background = colors[activeCats[0]];
+      categoryLabel.append(categorySwatch, document.createTextNode(categoryName(activeCats[0])));
+      categoryRow.append(categoryLabel, textNode('strong', '', fmt(total) + ' · 100%'));
+      categoryRow.addEventListener('click', () => {
+        state.category = state.category === activeCats[0] ? 'all' : activeCats[0];
+        render();
+      });
+      legend.append(categoryRow);
+
+      projects.forEach((project, index) => {
+        const item = textNode('div', 'insight-project-item');
+        const left = textNode('span', 'insight-legend-name');
+        const swatch = textNode('i', 'insight-swatch');
+        swatch.style.background = projectColors[index % projectColors.length];
+        const url = safeGithubLink(project.url);
+        const title = textNode(url ? 'a' : 'span', 'insight-project-name', project.title);
+        title.title = project.title;
+        if (url) {
+          title.href = url;
+          title.target = '_blank';
+          title.rel = 'noopener noreferrer';
+        }
+        left.append(swatch, title);
+        item.append(left, textNode('strong', '', '1 · ' + fmt(Math.round(portion)) + '%'));
+        legend.append(item);
+      });
+      return;
+    }
+
+    let offset = 0;
+    const parts = activeCats.map(key => {
+      const from = offset;
+      const to = (offset += counts[key] / total * 100);
+      return colors[key] + ' ' + from.toFixed(3) + '% ' + to.toFixed(3) + '%';
+    });
+    ring.style.background = parts.length
+      ? 'conic-gradient(' + parts.join(',') + ')' : '#242b41';
+    activeCats.forEach(key => {
+      const button = textNode('button', 'insight-legend-item');
       button.type = 'button';
       button.setAttribute('aria-pressed', String(state.category === key));
       button.title = tr('chartTip');
-      const left = textNode('span', 'insight-legend-name', '');
+      const left = textNode('span', 'insight-legend-name');
       const swatch = textNode('i', 'insight-swatch');
       swatch.style.background = colors[key];
       left.append(swatch, document.createTextNode(categoryName(key)));
-      const right = textNode('strong', '', fmt(counts[key]) + ' · ' + Math.round(counts[key] / total * 100) + '%');
+      const right = textNode('strong', '',
+        fmt(counts[key]) + ' · ' + Math.round(counts[key] / total * 100) + '%');
       button.append(left, right);
       button.addEventListener('click', () => {
         state.category = state.category === key ? 'all' : key;
