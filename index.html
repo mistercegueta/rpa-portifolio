@@ -17,8 +17,9 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="./css/styles.css" rel="stylesheet"/>
+<link href="./css/csv-insights.css" rel="stylesheet"/>
 <script defer="" src="./js/projects.js"></script>
-<script defer="" src="./js/i18n.js"></script><script defer="" src="./js/app.js"></script>
+<script defer="" src="./js/i18n.js"></script><script defer="" src="./js/app.js"></script><script defer="" src="./js/csv-insights.js"></script>
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Ir para conteúdo</a>
@@ -127,7 +128,7 @@
 <section aria-labelledby="labTitle" class="section section-lab container" id="laboratorio">
 <div class="section-heading" data-reveal=""><div class="section-kicker"><span class="section-number">03/</span> AUTOMATION PLAYGROUND</div><div class="heading-split"><h2 id="labTitle">Catálogo em <span>CSV.</span></h2><p>O laboratório consulta os repositórios públicos, organiza os metadados e exporta um inventário atualizado dos projetos de automação exibidos no site.</p></div></div>
 <div class="lab-layout" data-reveal="">
-<div class="lab-intro"><div aria-hidden="true" class="lab-icon">⌘</div><div class="lab-serial">DEMO_001 <span>/</span> CLIENT-SIDE ENGINE</div><h3>Do GitHub<br/><em>ao CSV.</em></h3><p>Quando você executar, o site tentará consultar novamente a API do GitHub e reunirá datas de criação e atualização, tecnologias, categorias, temas, links e outros metadados disponíveis. Funciona também sem conexão, usando o catálogo local.</p><div class="lab-commands"><span><b>01</b> Consultar GitHub</span><span><b>02</b> Identificar automações</span><span><b>03</b> Organizar metadados</span><span><b>04</b> Gerar inventário CSV</span></div><div class="lab-actions"><button class="button button-primary" id="runDemo" type="button"><span id="runDemoLabel">▶   Executar fluxo</span><span aria-hidden="true" class="button-icon">↗</span></button><button class="button button-ghost" disabled="" id="downloadCsv" type="button">↓ Baixar CSV</button></div><p class="lab-disclaimer">* Dados obtidos de repositórios públicos. Se a API estiver indisponível, o CSV identifica os itens provenientes da curadoria local.</p></div>
+<div class="lab-intro"><div aria-hidden="true" class="lab-icon">⌘</div><div class="lab-serial">DEMO_001 <span>/</span> CLIENT-SIDE ENGINE</div><h3>Do GitHub<br/><em>ao CSV.</em></h3><p>Quando você executar, o site tentará consultar novamente a API do GitHub e reunirá datas de criação e atualização, tecnologias, categorias, temas, links e outros metadados disponíveis. Funciona também sem conexão, usando o catálogo local.</p><div class="lab-commands"><span><b>01</b> Consultar GitHub</span><span><b>02</b> Identificar automações</span><span><b>03</b> Organizar metadados</span><span><b>04</b> Gerar inventário CSV</span></div><div class="lab-actions"><button class="button button-primary" id="runDemo" type="button"><span id="runDemoLabel">▶   Executar fluxo</span><span aria-hidden="true" class="button-icon">↗</span></button><button class="button button-ghost" disabled="" id="downloadCsv" type="button">↓ Baixar CSV</button><button class="button button-ghost insight-trigger" id="openCsvExplorer" type="button"><span data-insight-text="open">◈ Explorar dados</span> <span aria-hidden="true">↗</span></button></div><p class="lab-disclaimer">* Dados obtidos de repositórios públicos. Se a API estiver indisponível, o CSV identifica os itens provenientes da curadoria local.</p></div>
 <div aria-label="Terminal de demonstração de automação" class="terminal" role="region"><div class="terminal-titlebar"><span class="terminal-dots"><i></i><i></i><i></i></span><span>brandon@rpa-engine: ~/portfolio</span><span>⌘</span></div><div class="terminal-body"><div class="terminal-path"><span class="terminal-purple">brandon@rpa-engine</span>:<span class="terminal-cyan">~/portfolio</span>$ node catalog-export.js</div><div aria-hidden="true" class="terminal-ascii">┌───────────────────────────────────────┐
 │    <span>B / S    REPOSITORY INVENTORY</span>       │
 │    GITHUB → CLASSIFY → CSV            │
@@ -144,6 +145,68 @@
 <section aria-labelledby="contactTitle" class="section section-contact" id="contato"><div aria-hidden="true" class="contact-neon"></div><div class="container contact-content" data-reveal=""><div class="section-kicker"><span class="section-number">06/</span> CONTATO</div><div class="contact-overline"><span class="live-dot"></span> CONTATO PROFISSIONAL</div><h2 id="contactTitle">Entre em <span>contato.</span></h2><p>Para propostas de trabalho, parcerias técnicas ou oportunidades em RPA, automação de processos e engenharia de dados, utilize os canais abaixo.</p><div class="contact-actions"><a class="button button-contact" href="mailto:trabalhobrandon@gmail.com?subject=Contato%20profissional%20%7C%20Portf%C3%B3lio%20Brandon%20Saraiva"><span>Enviar e-mail</span><span aria-hidden="true" class="button-icon">↗</span></a><a class="contact-link" href="https://www.linkedin.com/in/brandon-saraiva-006a4823b/" rel="noopener noreferrer" target="_blank">LinkedIn ↗</a><a class="contact-link" href="https://github.com/BrandonSaraiva" rel="noopener noreferrer" target="_blank">GitHub ↗</a></div><div class="contact-email">trabalhobrandon@gmail.com</div></div></section>
 </main>
 <footer class="site-footer"><div class="container footer-inner"><a class="footer-brand" href="#inicio">B/S<span>_</span></a><span>RPA / AUTOMAÇÃO / DADOS</span><span>© <span id="copyrightYear">2026</span> BRANDON SARAIVA</span><a class="footer-top" href="#inicio">VOLTAR AO TOPO ↑</a></div></footer>
+
+<!-- The CSV analysis works fully offline: the selected file never leaves the browser. -->
+<dialog class="insights-modal" id="csvInsightDialog" aria-labelledby="insightTitle" aria-describedby="insightSubtitle">
+  <div class="insight-shell">
+    <div class="insight-head">
+      <div>
+        <div class="insight-kicker" data-insight-text="eyebrow">DEMO_002 / DATA EXPLORER</div>
+        <h2 id="insightTitle" data-insight-text="title">Do CSV aos insights.</h2>
+        <p id="insightSubtitle" data-insight-text="subtitle">Abra o inventário e investigue os projetos com gráficos conectados.</p>
+      </div>
+      <button id="insightClose" type="button" class="insight-close" aria-label="Fechar">×</button>
+    </div>
+    <div class="insight-source-zone">
+      <label class="insight-drop" id="insightDrop" for="insightUpload">
+        <span class="insight-drop-icon" aria-hidden="true">⇧</span>
+        <span><strong data-insight-text="upload">Carregar CSV</strong><small data-insight-text="drop">Arraste um CSV até aqui ou selecione um arquivo.</small></span>
+        <input type="file" class="insight-file-input" id="insightUpload" accept=".csv,text/csv" aria-label="Escolher arquivo CSV"/>
+      </label>
+      <div class="insight-source-side">
+        <button type="button" class="insight-use-current" id="insightUseGenerated" disabled data-insight-text="current">Usar CSV recém-gerado</button>
+        <small data-insight-text="privacy">Leitura 100% local no navegador. Nenhum arquivo é enviado.</small>
+      </div>
+    </div>
+    <p id="insightError" class="insight-error" role="alert" hidden></p>
+    <div id="insightEmpty" class="insight-empty">
+      <span class="insight-empty-glyph" aria-hidden="true">⌁⌁</span>
+      <h3 data-insight-text="emptyTitle">Seu inventário vira um painel.</h3>
+      <p data-insight-text="emptyBody">Execute o fluxo, baixe o CSV e carregue-o aqui. Você também pode analisar um arquivo exportado anteriormente.</p>
+    </div>
+    <div id="insightDashboard" class="insight-dashboard" hidden>
+      <div id="insightFileLabel" class="insight-file-label" aria-live="polite"></div>
+      <div class="insight-filters" role="group" aria-label="Filtros do inventário">
+        <div class="insight-filter-field"><label for="insightCategory" data-insight-text="filterCat">Categoria</label><select id="insightCategory"></select></div>
+        <div class="insight-filter-field"><label for="insightEra" data-insight-text="filterEra">Origem do projeto</label><select id="insightEra"></select></div>
+        <div class="insight-filter-field"><label for="insightSource" data-insight-text="filterSource">Fonte dos metadados</label><select id="insightSource"></select></div>
+        <div class="insight-filter-field"><label for="insightSearch" data-insight-text="filterSearch">Buscar repositório</label><input id="insightSearch" type="search" autocomplete="off" placeholder="Nome ou tecnologia..." data-insight-placeholder="filterSearchPlaceholder"/></div>
+      </div>
+      <div class="insight-filters-footer">
+        <button type="button" id="insightClearFilters" class="insight-clear" data-insight-text="clear">Limpar filtros</button>
+        <button type="button" id="insightYearBadge" class="insight-year-badge" aria-label="Remover filtro de ano" hidden></button>
+        <span id="insightActiveFilter" class="insight-active-filter" data-insight-text="filtered" hidden>Filtro ativo</span>
+      </div>
+      <div class="insight-kpis" aria-label="Resumo dos projetos filtrados">
+        <div class="insight-kpi"><small data-insight-text="selected">Na seleção</small><strong id="insightMetricTotal">0</strong></div>
+        <div class="insight-kpi"><small data-insight-text="api">Com API</small><strong id="insightMetricApi">0</strong></div>
+        <div class="insight-kpi"><small data-insight-text="techs">Tecnologias</small><strong id="insightMetricTech">0</strong></div>
+        <div class="insight-kpi"><small data-insight-text="push">Último push informado</small><strong id="insightMetricPush">0</strong></div>
+      </div>
+      <p id="insightNoResults" class="insight-no-results" data-insight-text="noFilter" hidden>Nenhum projeto corresponde aos filtros. Limpe os filtros para explorar novamente.</p>
+      <div class="insight-grid">
+        <section class="insight-card" aria-labelledby="insightCatTitle"><div class="insight-card-kicker">01 / CATEGORY SIGNAL</div><h3 id="insightCatTitle" data-insight-text="donutTitle">Onde estão as automações?</h3><p data-insight-text="donutNote">Categorias editoriais do catálogo; clique para filtrar.</p>
+          <div class="insight-donut-layout"><div id="insightDonut" class="insight-donut" role="img" aria-label="Distribuição por categoria"><div class="insight-donut-hole"><strong id="insightDonutNumber">0</strong><small id="insightDonutCaption">projetos</small></div></div><div id="insightCategoriesLegend" class="insight-categories-legend"></div></div>
+        </section>
+        <section class="insight-card" aria-labelledby="insightTechTitle"><div class="insight-card-kicker">02 / TECH STACK</div><h3 id="insightTechTitle" data-insight-text="techTitle">Stack mais presente</h3><p data-insight-text="techNote">Tecnologias declaradas e linguagem principal. Um projeto conta uma vez por tecnologia.</p><div id="insightTechBars" class="insight-tech-bars"></div></section>
+        <section class="insight-card" aria-labelledby="insightTimeTitle"><div class="insight-card-kicker">03 / REPOSITORY TIMELINE</div><h3 id="insightTimeTitle" data-insight-text="timeTitle">Linha do tempo dos repositórios</h3><p data-insight-text="timeNote">Ano de criação e ano do ÚLTIMO push de cada repositório. Não representa número de commits.</p><div id="insightTimeline"></div></section>
+        <section class="insight-card" aria-labelledby="insightMatrixTitle"><div class="insight-card-kicker">04 / PROJECT MATRIX</div><h3 id="insightMatrixTitle" data-insight-text="matrixTitle">Acadêmico × aplicação</h3><p data-insight-text="matrixNote">Classificação do portfólio, não um campo calculado pelo GitHub.</p><div id="insightMatrix" class="insight-matrix"></div></section>
+        <section class="insight-card insight-card-wide" aria-labelledby="insightRankTitle"><div class="insight-card-kicker">05 / REPOSITORY HIGHLIGHTS</div><h3 id="insightRankTitle" data-insight-text="rankTitle">Repositórios em destaque</h3><p id="insightRankNote"></p><div id="insightRank" class="insight-rank-list"></div></section>
+      </div>
+      <p class="insight-bottom-note" data-insight-text="missingMeta">Metadados ausentes são omitidos; zero não é ausência de dado.</p>
+    </div>
+  </div>
+</dialog>
 <noscript><div class="noscript-note">Este site usa JavaScript para exibir o catálogo interativo e a demonstração. Consulte os projetos em <a href="https://github.com/BrandonSaraiva">github.com/BrandonSaraiva</a>.</div></noscript>
 </body>
 </html>
