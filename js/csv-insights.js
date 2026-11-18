@@ -23,7 +23,7 @@
       emptyBody: 'O painel analisa o inventário CSV da demonstração. É possível selecionar um arquivo existente ou utilizar o inventário gerado nesta sessão.',
       close: 'Fechar painel', clear: 'Limpar filtros', all: 'Todos',
       filterCat: 'Categoria', filterEra: 'Origem do projeto', filterSource: 'Fonte dos metadados',
-      filterSearch: 'Buscar repositório', filterSearchPlaceholder: 'Nome ou tecnologia...',
+      filterSearch: 'Buscar tecnologia', filterSearchPlaceholder: 'Nome da tecnologia...',
       selected: 'Repositórios', api: 'Categorias', techs: 'Tecnologias', push: 'Linguagens principais',
       count: 'projetos', donutTitle: 'Projetos por categoria',
       donutNote: 'Distribuição por área de atuação. Selecione uma categoria para filtrar.',
@@ -68,7 +68,7 @@
       emptyBody: 'This dashboard analyzes CSV files exported by the demo. Load a previous export or use the inventory generated in the current session.',
       close: 'Close dashboard', clear: 'Clear filters', all: 'All',
       filterCat: 'Category', filterEra: 'Project context', filterSource: 'Metadata source',
-      filterSearch: 'Search repositories', filterSearchPlaceholder: 'Name or technology...',
+      filterSearch: 'Search technologies', filterSearchPlaceholder: 'Technology name...',
       selected: 'Repositories', api: 'Categories', techs: 'Technologies', push: 'Primary languages',
       count: 'projects', donutTitle: 'Projects by category',
       donutNote: 'Distribution by field of work. Select a category to filter.',
@@ -259,12 +259,18 @@
     setupSelect(selectEra, [['all', tr('all')], ['academica', tr('academic')], ['aplicada', tr('applied')], ['outros', tr('other')]], state.era);
     setupSelect(selectSource, [['all', tr('all')], ['api', tr('sourceApi')], ['local', tr('sourceLocal')], ['outros', tr('sourceOther')]], state.source);
   }
+  function matchesTechnologySearch(row) {
+    // Busca somente tecnologias declaradas no CSV e a linguagem principal,
+    // já incluída na lista de tecnologias normalizada de cada registro.
+    const term = norm(state.search.trim());
+    return !term || row.technologies.some(technology => norm(technology).includes(term));
+  }
   function hasMatch(row, except = '') {
     if (except !== 'category' && state.category !== 'all' && row.category !== state.category) return false;
     if (except !== 'era' && state.era !== 'all' && row.era !== state.era) return false;
     if (except !== 'source' && state.source !== 'all' && row.source !== state.source) return false;
     if (except !== 'tech' && state.tech && !row.technologies.some(v => norm(v) === norm(state.tech))) return false;
-    if (state.search && !norm([row.repo, row.title, ...row.technologies].join(' ')).includes(norm(state.search))) return false;
+    if (!matchesTechnologySearch(row)) return false;
     return true;
   }
   function filtered(except = '') { return state.rows.filter(row => hasMatch(row, except)); }
@@ -417,7 +423,7 @@
     const rows = state.rows.filter(r => {
       if (state.source !== 'all' && r.source !== state.source) return false;
       if (state.tech && !r.technologies.some(v => norm(v) === norm(state.tech))) return false;
-      if (state.search && !norm([r.repo, r.title, ...r.technologies].join(' ')).includes(norm(state.search))) return false;
+      if (!matchesTechnologySearch(r)) return false;
       return true;
     });
     const eras = ['academica', 'aplicada'];
