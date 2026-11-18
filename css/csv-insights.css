@@ -145,3 +145,14 @@ a.insight-rank-link:hover{color:var(--cyan)}
 @media(prefers-reduced-motion:reduce){.insight-timeline-bar,.insight-drop{transition:none}}
 
 .insight-card-wide{grid-column:1/-1}
+
+.insight-coverage-list{display:grid;gap:12px}
+.insight-coverage-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;
+  font:11px var(--display);color:#c8c8df}
+.insight-coverage-head strong{font:10px var(--mono);color:var(--cyan)}
+.insight-coverage-track{height:7px;background:#292d46;display:block}
+.insight-coverage-track i{height:100%;display:block;background:linear-gradient(90deg,#69efce,#b9acee)}
+.insight-source-breakdown{display:flex;flex-wrap:wrap;gap:7px;margin-top:17px;border-top:1px solid #30344c;padding-top:16px}
+.insight-source-chip{font:9px var(--mono);padding:8px 10px;color:#bab4dc;background:#1b2033;
+  border:1px solid #393958}
+.insight-source-chip:hover,.insight-source-chip[aria-pressed=true]{border-color:var(--cyan);color:var(--cyan)}
