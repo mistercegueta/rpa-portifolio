@@ -181,3 +181,12 @@ width:max-content;min-width:100%}
 a.insight-project-name:hover{color:var(--cyan);text-decoration:underline;text-underline-offset:3px}
 .insight-project-item strong{font:10px var(--mono);color:#c8c3e6;white-space:nowrap}
 .insight-project-item:focus-within{outline:1px solid var(--cyan);outline-offset:1px}
+
+/* Cada gráfico resume o mesmo subconjunto de repositórios. */
+.insight-active-filter{color:#a8acd0}
+.insight-active-filter[data-filtered=true]{color:var(--cyan)}
+.insight-project-item{padding:4px 7px 5px 19px}
+.insight-project-bullet{width:5px;height:5px;border-radius:50%;display:inline-block;
+  flex-shrink:0;opacity:.8}
+.insight-project-item .insight-legend-name{min-width:0}
+.insight-project-item .insight-project-name{font-size:10px;line-height:1.5}
