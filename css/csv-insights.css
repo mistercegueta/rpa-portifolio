@@ -141,7 +141,7 @@ a.insight-rank-link:hover{color:var(--cyan)}
   border:1px solid #353751;background:#101524;scrollbar-color:#5c567b #151b2b}
 .insight-stack-matrix{display:grid;
   grid-template-columns:170px repeat(var(--stack-columns),minmax(98px,1fr));
-  width:max(100%,calc(170px + var(--stack-columns)*98px));}
+  width:max-content;min-width:100%;}
 .insight-stack-corner,.insight-stack-project{display:flex;align-items:flex-end;justify-content:center;
   min-height:80px;padding:11px 8px;border-bottom:1px solid #373a54;border-right:1px solid #2e3149;
   background:#1b2034;min-width:0;text-align:center}
@@ -167,7 +167,7 @@ a.insight-stack-project:hover{color:var(--cyan);text-decoration:underline;text-u
 .insight-stack-summary{color:#a4abc7;font:10px/1.7 var(--mono);padding-top:12px}
 @media(max-width:650px){
 .insight-stack-matrix{grid-template-columns:125px repeat(var(--stack-columns),minmax(86px,1fr));
-width:max(100%,calc(125px + var(--stack-columns)*86px))}
+width:max-content;min-width:100%}
 .insight-stack-project{font-size:10px}.insight-stack-technology{font-size:10px;padding:8px}
 }
 @media(prefers-reduced-motion:reduce){.insight-stack-dot{transition:none}}
