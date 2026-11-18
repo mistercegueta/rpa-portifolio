@@ -143,3 +143,5 @@ a.insight-rank-link:hover{color:var(--cyan)}
   .insight-error{margin:0 17px 12px}
 }
 @media(prefers-reduced-motion:reduce){.insight-timeline-bar,.insight-drop{transition:none}}
+
+.insight-card-wide{grid-column:1/-1}
