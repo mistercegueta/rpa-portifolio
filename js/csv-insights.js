@@ -210,7 +210,7 @@
       const get = key => positions[key] < 0 ? '' : String(cells[positions[key]] ?? '').trim();
       const repo = get('repo') || get('title');
       if (!repo) continue;
-      const techs = [get('language'), ...get('technologies').split('|'), ...get('topics').split('|')]
+      const techs = [get('language'), ...get('technologies').split('|')]
         .map(v => v.trim()).filter(v => v && norm(v) !== 'open source');
       const unique = [...new Map(techs.map(v => [norm(v), v])).values()];
       const record = {
@@ -390,8 +390,6 @@
   function renderMatrix() {
     const host = $('insightMatrix');
     host.replaceChildren();
-    const base = state.rows.filter(row => hasMatch(row, 'category') || false)
-      .filter(row => state.era === 'all' || row.era === state.era || true);
     // Cross-filter context: ignore both category AND era, keep the other filters.
     const rows = state.rows.filter(r => {
       if (state.source !== 'all' && r.source !== state.source) return false;
@@ -472,7 +470,7 @@
     const selected = filtered();
     syncSelects();
     renderMetrics(selected);
-    $('insightSearch').value = state.search;
+    if ($('insightSearch').value !== state.search) $('insightSearch').value = state.search;
     $('insightDashboard').hidden = false;
     $('insightEmpty').hidden = true;
     $('insightNoResults').hidden = selected.length !== 0;
