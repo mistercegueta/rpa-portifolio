@@ -192,8 +192,8 @@
   /* ========= Project gallery + eras ========= */
   const symbols = { bot: '⌘', data: '⋈', scrape: '⌗', message: '✉', database: '▤', telegram: '◈', workflow: '◇', generic: '⟡' };
   const labels = {
-    pt: { bots: 'BOTS & RPA', web: 'WEB SCRAPING', dados: 'DADOS & ETL', fluxos: 'AUTOMAÇÃO' },
-    en: { bots: 'BOTS & RPA', web: 'WEB SCRAPING', dados: 'DATA & ETL', fluxos: 'AUTOMATION' }
+    pt: { bots: 'BOTS E ASSISTENTES', web: 'EXTRAÇÃO DE CONTEÚDO', dados: 'DADOS E INTEGRAÇÃO', fluxos: 'AUTOMAÇÃO DE ROTINAS' },
+    en: { bots: 'BOTS AND ASSISTANTS', web: 'CONTENT EXTRACTION', dados: 'DATA AND INTEGRATION', fluxos: 'WORKFLOW AUTOMATION' }
   };
   const eraText = { pt: { aplicada: 'APLICAÇÕES', academica: 'FACULDADE' }, en: { aplicada: 'APPLIED', academica: 'UNIVERSITY' } };
   function element(tag, className, text) {
