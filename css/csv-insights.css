@@ -92,19 +92,6 @@
 .insight-bar-top strong{color:var(--cyan);font:10px var(--mono)}
 .insight-bar-track,.insight-rank-track{height:5px;background:#2b2c43;display:block;overflow:hidden}
 .insight-bar-fill{display:block;height:100%;background:linear-gradient(90deg,#8267e8,#bfaaff)}
-.insight-timeline-graph{height:222px;display:flex;align-items:stretch;justify-content:space-around;gap:6px;
-  border-bottom:1px solid #484461;padding:8px 0 0;overflow-x:auto}
-.insight-timeline-col{flex:1;min-width:37px;max-width:80px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
-.insight-timeline-pair{display:flex;align-items:flex-end;justify-content:center;gap:4px;width:100%;flex:1}
-.insight-timeline-bar{width:30%;max-width:18px;min-width:8px;display:block;border:0;background:#b49aff;
-  transition:filter .18s,height .18s;position:relative}
-.insight-timeline-bar.pushed{background:var(--cyan)}
-.insight-timeline-bar:hover,.insight-timeline-bar[aria-pressed=true]{filter:brightness(1.38);outline:1px solid #fff}
-.insight-year{font:9px var(--mono);color:#a3a6bd;padding:11px 0 8px}
-.insight-timeline-key{display:flex;justify-content:center;gap:22px;padding-top:16px;color:#a7acc5;font:10px var(--mono)}
-.insight-timeline-key span{display:flex;gap:7px;align-items:center}
-.insight-timeline-key i{display:inline-block;width:9px;height:9px}
-.insight-key-created{background:#b49aff}.insight-key-pushed{background:var(--cyan)}
 .insight-matrix{display:grid;grid-template-columns:minmax(100px,1.3fr) repeat(2,minmax(75px,1fr));gap:7px;align-items:stretch}
 .insight-matrix-header{font:9px var(--mono);color:#9899bc;text-align:center;padding:5px 0}
 .insight-matrix-rowlabel{font:11px var(--display);color:#e8e7f9;display:flex;align-items:center}
@@ -146,13 +133,41 @@ a.insight-rank-link:hover{color:var(--cyan)}
 
 .insight-card-wide{grid-column:1/-1}
 
-.insight-coverage-list{display:grid;gap:12px}
-.insight-coverage-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px;
-  font:11px var(--display);color:#c8c8df}
-.insight-coverage-head strong{font:10px var(--mono);color:var(--cyan)}
-.insight-coverage-track{height:7px;background:#292d46;display:block}
-.insight-coverage-track i{height:100%;display:block;background:linear-gradient(90deg,#69efce,#b9acee)}
-.insight-source-breakdown{display:flex;flex-wrap:wrap;gap:7px;margin-top:17px;border-top:1px solid #30344c;padding-top:16px}
-.insight-source-chip{font:9px var(--mono);padding:8px 10px;color:#bab4dc;background:#1b2033;
-  border:1px solid #393958}
-.insight-source-chip:hover,.insight-source-chip[aria-pressed=true]{border-color:var(--cyan);color:var(--cyan)}
+
+
+/* Matriz interativa de tecnologias por repositório. A rolagem preserva nomes legíveis. */
+.insight-stack-card{grid-column:1/-1}
+.insight-stack-map{max-width:100%;overflow-x:auto;overflow-y:hidden;
+  border:1px solid #353751;background:#101524;scrollbar-color:#5c567b #151b2b}
+.insight-stack-matrix{display:grid;
+  grid-template-columns:170px repeat(var(--stack-columns),minmax(98px,1fr));
+  width:max(100%,calc(170px + var(--stack-columns)*98px));}
+.insight-stack-corner,.insight-stack-project{display:flex;align-items:flex-end;justify-content:center;
+  min-height:80px;padding:11px 8px;border-bottom:1px solid #373a54;border-right:1px solid #2e3149;
+  background:#1b2034;min-width:0;text-align:center}
+.insight-stack-corner{position:sticky;left:0;z-index:3;justify-content:flex-start;
+  font:10px var(--mono);color:#a2a2c0}
+.insight-stack-project{font:600 11px/1.4 var(--display);color:#efebff;overflow-wrap:anywhere}
+a.insight-stack-project:hover{color:var(--cyan);text-decoration:underline;text-underline-offset:3px}
+.insight-stack-technology{position:sticky;left:0;z-index:2;min-height:43px;
+  display:flex;align-items:center;justify-content:space-between;gap:7px;
+  padding:9px 13px;border:0;border-right:1px solid #373e58;border-bottom:1px solid #293148;
+  background:#191e31;color:#e4e0f6;font:11px/1.35 var(--display);text-align:left}
+.insight-stack-technology span{overflow-wrap:anywhere}
+.insight-stack-technology small{flex-shrink:0;font:10px var(--mono);color:var(--cyan)}
+.insight-stack-technology:hover,.insight-stack-technology[aria-pressed=true]{background:#30294b;color:#fff}
+.insight-stack-cell{display:grid;place-items:center;min-height:43px;
+  background:#141a2b;border-right:1px solid #273047;border-bottom:1px solid #273047}
+.insight-stack-cell:nth-child(even){background:#181e30}
+.insight-stack-dot{width:15px;height:15px;padding:0;border:1px solid rgba(255,255,255,.25);
+  border-radius:50%;background:var(--dot-color,var(--cyan));box-shadow:0 0 0 4px rgba(165,139,255,.075);
+  transition:transform .15s,box-shadow .15s}
+.insight-stack-dot:hover,.insight-stack-dot[aria-pressed=true]{transform:scale(1.23);
+  border-color:#fff;box-shadow:0 0 0 6px rgba(105,239,206,.14)}
+.insight-stack-summary{color:#a4abc7;font:10px/1.7 var(--mono);padding-top:12px}
+@media(max-width:650px){
+.insight-stack-matrix{grid-template-columns:125px repeat(var(--stack-columns),minmax(86px,1fr));
+width:max(100%,calc(125px + var(--stack-columns)*86px))}
+.insight-stack-project{font-size:10px}.insight-stack-technology{font-size:10px;padding:8px}
+}
+@media(prefers-reduced-motion:reduce){.insight-stack-dot{transition:none}}
