@@ -22,15 +22,15 @@
       current: 'Usar inventário desta sessão', emptyTitle: 'Nenhum arquivo carregado.',
       emptyBody: 'O painel analisa o inventário CSV da demonstração. É possível selecionar um arquivo existente ou utilizar o inventário gerado nesta sessão.',
       close: 'Fechar painel', clear: 'Limpar filtros', all: 'Todos',
-      filterCat: 'Categoria', filterEra: 'Origem do projeto', filterSource: 'Fonte dos metadados',
+      filterCat: 'Tipo de projeto', filterEra: 'Origem do projeto', filterSource: 'Fonte dos metadados',
       filterSearch: 'Buscar tecnologia', filterSearchPlaceholder: 'Nome da tecnologia...',
-      selected: 'Repositórios', api: 'Categorias', techs: 'Tecnologias', push: 'Linguagens principais',
-      count: 'projetos', donutTitle: 'Projetos por categoria',
-      donutNote: 'Distribuição por área de atuação. Selecione uma categoria para filtrar.',
-      donutSameCategory: (name, count) => count + ' projetos pertencem à categoria ' + name + '. Cada fatia representa um projeto.',
-      techTitle: 'Tecnologias mais utilizadas', techNote: 'Quantidade de projetos que utilizam cada tecnologia; repetições dentro do mesmo repositório não são contabilizadas.',
-      stackTitle: 'Tecnologias por repositório',
-      stackNote: 'Cada ponto indica uma tecnologia presente em um projeto. Selecione a linha para filtrar; o nome do repositório abre o código no GitHub.',
+      selected: 'Repositórios', api: 'Tipos de projeto', techs: 'Tecnologias', push: 'Linguagens principais',
+      selectionInfo: (shown, total) => `Exibindo ${shown} de ${total} repositórios selecionados`,
+      count: 'projetos', donutTitle: 'Projetos por tipo',
+      donutNote: 'Agrupamento pela finalidade dos projetos. As ferramentas e técnicas aparecem nos gráficos seguintes.',
+      techTitle: 'Ferramentas e técnicas', techNote: 'Cada barra indica quantos dos repositórios selecionados utilizam a ferramenta ou técnica.',
+      stackTitle: 'Ferramentas por repositório',
+      stackNote: 'As colunas são repositórios selecionados e as linhas são tecnologias ou técnicas. Um ponto indica a presença da ferramenta no projeto.',
       stackEmpty: 'Não há tecnologias declaradas na seleção.',
       stackInfo: (shown, all, techShown, techAll) => `Exibindo ${shown} de ${all} repositórios · ${techShown} de ${techAll} tecnologias · clique em uma linha ou ponto para filtrar`,
       matrixTitle: 'Categorias e contextos',
@@ -68,15 +68,15 @@
       current: 'Use current session inventory', emptyTitle: 'No file loaded.',
       emptyBody: 'This dashboard analyzes CSV files exported by the demo. Load a previous export or use the inventory generated in the current session.',
       close: 'Close dashboard', clear: 'Clear filters', all: 'All',
-      filterCat: 'Category', filterEra: 'Project context', filterSource: 'Metadata source',
+      filterCat: 'Project type', filterEra: 'Project context', filterSource: 'Metadata source',
       filterSearch: 'Search technologies', filterSearchPlaceholder: 'Technology name...',
-      selected: 'Repositories', api: 'Categories', techs: 'Technologies', push: 'Primary languages',
-      count: 'projects', donutTitle: 'Projects by category',
-      donutNote: 'Distribution by field of work. Select a category to filter.',
-      donutSameCategory: (name, count) => count + ' projects belong to ' + name + '. Each segment represents one project.',
-      techTitle: 'Most used technologies', techNote: 'Number of projects using each technology, counting duplicates in a repository only once.',
-      stackTitle: 'Technologies by repository',
-      stackNote: 'Each dot indicates a technology used in a project. Select a row to filter; repository names link to GitHub.',
+      selected: 'Repositories', api: 'Project types', techs: 'Technologies', push: 'Primary languages',
+      selectionInfo: (shown, total) => `Showing ${shown} of ${total} selected repositories`,
+      count: 'projects', donutTitle: 'Projects by type',
+      donutNote: 'Grouped by what each project does. Tools and techniques are shown in the charts below.',
+      techTitle: 'Tools and techniques', techNote: 'Each bar counts the selected repositories using that tool or technique.',
+      stackTitle: 'Tools by repository',
+      stackNote: 'Columns are selected repositories and rows are tools or techniques. A dot marks where each one is used.',
       stackEmpty: 'No technologies are available in this selection.',
       stackInfo: (shown, all, techShown, techAll) => `Showing ${shown} of ${all} repositories · ${techShown} of ${techAll} technologies · select a row or dot to filter`,
       matrixTitle: 'Categories and contexts',
@@ -117,16 +117,16 @@
   const norm = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
   function roleCategory(value) {
     const v = norm(value);
-    if (/bot|rpa/.test(v)) return 'bots';
-    if (/web|scrap|crawler/.test(v)) return 'web';
-    if (/dados|data|etl|pipeline/.test(v)) return 'dados';
+    if (/bot|assist|rpa/.test(v)) return 'bots';
+    if (/web|scrap|crawler|extrac|coleta.*conteudo|content extraction/.test(v)) return 'web';
+    if (/dados|data|etl|pipeline|integrac|integration/.test(v)) return 'dados';
     if (/automat|workflow|fluxo/.test(v)) return 'fluxos';
     return 'outros';
   }
   function categoryName(key) {
     const map = {
-      pt: { bots: 'Bots & RPA', web: 'Web scraping', dados: 'Dados & ETL', fluxos: 'Automação', outros: 'Outros / não informado' },
-      en: { bots: 'Bots & RPA', web: 'Web scraping', dados: 'Data & ETL', fluxos: 'Automation', outros: 'Other / unknown' }
+      pt: { bots: 'Bots e assistentes', web: 'Extração de conteúdo', dados: 'Dados e integração', fluxos: 'Automação de rotinas', outros: 'Outros projetos' },
+      en: { bots: 'Bots and assistants', web: 'Content extraction', dados: 'Data and integration', fluxos: 'Workflow automation', outros: 'Other projects' }
     };
     return map[language][key] || key;
   }
@@ -293,96 +293,37 @@
     metric('insightMetricPush', new Set(rows.map(r => norm(r.language)).filter(Boolean)).size);
     $('insightFileLabel').textContent = tr('loaded') + ' ' + state.file + ' · ' + fmt(state.rows.length) + ' ' + tr('rows');
     const active = [state.category !== 'all', state.era !== 'all', state.source !== 'all', !!state.tech, !!state.search].some(Boolean);
-    $('insightActiveFilter').hidden = !active;
+    $('insightActiveFilter').textContent = tr('selectionInfo')(rows.length, state.rows.length);
+    $('insightActiveFilter').hidden = false;
+    $('insightActiveFilter').setAttribute('data-filtered', String(active));
     $('insightClearFilters').disabled = !active;
   }
   function renderDonut() {
-    const base = filtered('category');
+    // All graphs use the same selected set. Never ignore category when a
+    // category has already been chosen: that made 2 selected look like 6.
+    const rows = filtered();
     const ring = $('insightDonut');
     const legend = $('insightCategoriesLegend');
-    const note = $('insightDonutNote');
     legend.replaceChildren();
-    const counts = Object.fromEntries(cats.map(key => [
-      key, base.filter(row => row.category === key).length
-    ]));
+    const counts = Object.fromEntries(cats.map(key =>
+      [key, rows.filter(row => row.category === key).length]));
     const activeCats = cats.filter(key => counts[key] > 0);
-    const total = base.length;
-    const sameCategory = total > 1 && activeCats.length === 1;
-
+    const total = rows.length;
     $('insightDonutNumber').textContent = fmt(total);
     $('insightDonutCaption').textContent = tr('count');
-    ring.setAttribute('aria-label', sameCategory
-      ? tr('donutSameCategory')(categoryName(activeCats[0]), total)
-      : tr('donutTitle') + ': ' + fmt(total));
-    note.textContent = sameCategory
-      ? tr('donutSameCategory')(categoryName(activeCats[0]), total)
-      : tr('donutNote');
+    $('insightDonutNote').textContent = tr('donutNote');
+    ring.setAttribute('aria-label', tr('donutTitle') + ': ' + fmt(total));
 
-    if (sameCategory) {
-      // Dois projetos na mesma categoria devem parecer duas entidades,
-      // e não uma única rosca de 100% sem nomes identificáveis.
-      const projectColors = [
-        '#a58bff', '#69efce', '#e8c078', '#ecacff',
-        '#839dfa', '#89d6df', '#b6e2aa', '#e49eac'
-      ];
-      const projects = base.slice().sort((x, y) =>
-        x.title.localeCompare(y.title, language === 'en' ? 'en' : 'pt'));
-      const portion = 100 / projects.length;
-      const segments = [];
-      projects.forEach((project, index) => {
-        const from = index * portion;
-        const to = (index + 1) * portion;
-        const boundary = Math.max(from, to - 0.45);
-        segments.push(
-          projectColors[index % projectColors.length] + ' ' + from + '% ' + boundary + '%',
-          '#131728 ' + boundary + '% ' + to + '%'
-        );
-      });
-      ring.style.background = 'conic-gradient(' + segments.join(', ') + ')';
-
-      const categoryRow = textNode('button', 'insight-legend-item insight-legend-category');
-      categoryRow.type = 'button';
-      categoryRow.setAttribute('aria-pressed', String(state.category === activeCats[0]));
-      categoryRow.title = tr('chartTip');
-      const categoryLabel = textNode('span', 'insight-legend-name');
-      const categorySwatch = textNode('i', 'insight-swatch');
-      categorySwatch.style.background = colors[activeCats[0]];
-      categoryLabel.append(categorySwatch, document.createTextNode(categoryName(activeCats[0])));
-      categoryRow.append(categoryLabel, textNode('strong', '', fmt(total) + ' · 100%'));
-      categoryRow.addEventListener('click', () => {
-        state.category = state.category === activeCats[0] ? 'all' : activeCats[0];
-        render();
-      });
-      legend.append(categoryRow);
-
-      projects.forEach((project, index) => {
-        const item = textNode('div', 'insight-project-item');
-        const left = textNode('span', 'insight-legend-name');
-        const swatch = textNode('i', 'insight-swatch');
-        swatch.style.background = projectColors[index % projectColors.length];
-        const url = safeGithubLink(project.url);
-        const title = textNode(url ? 'a' : 'span', 'insight-project-name', project.title);
-        title.title = project.title;
-        if (url) {
-          title.href = url;
-          title.target = '_blank';
-          title.rel = 'noopener noreferrer';
-        }
-        left.append(swatch, title);
-        item.append(left, textNode('strong', '', '1 · ' + fmt(Math.round(portion)) + '%'));
-        legend.append(item);
-      });
-      return;
-    }
-
+    // A fatia SEMPRE significa tipo de projeto. Nunca mudar o significado
+    // para "projeto individual" quando há só um tipo no filtro.
     let offset = 0;
     const parts = activeCats.map(key => {
-      const from = offset;
-      const to = (offset += counts[key] / total * 100);
+      const from = offset, to = (offset += counts[key] / total * 100);
       return colors[key] + ' ' + from.toFixed(3) + '% ' + to.toFixed(3) + '%';
     });
     ring.style.background = parts.length
-      ? 'conic-gradient(' + parts.join(',') + ')' : '#242b41';
+      ? 'conic-gradient(' + parts.join(', ') + ')' : '#242b41';
+
     activeCats.forEach(key => {
       const button = textNode('button', 'insight-legend-item');
       button.type = 'button';
@@ -392,14 +333,37 @@
       const swatch = textNode('i', 'insight-swatch');
       swatch.style.background = colors[key];
       left.append(swatch, document.createTextNode(categoryName(key)));
-      const right = textNode('strong', '',
-        fmt(counts[key]) + ' · ' + Math.round(counts[key] / total * 100) + '%');
-      button.append(left, right);
+      button.append(left, textNode('strong', '',
+        fmt(counts[key]) + ' · ' + Math.round(counts[key] / total * 100) + '%'));
       button.addEventListener('click', () => {
         state.category = state.category === key ? 'all' : key;
         render();
       });
       legend.append(button);
+
+      // Mostrar nomes reais para diferenciar TIPO de REPOSITÓRIO.
+      // Em CSVs longos, o comparativo inferior continua sendo a lista.
+      if (total <= 10) {
+        rows.filter(row => row.category === key)
+          .sort((a, b) => a.title.localeCompare(b.title, language === 'en' ? 'en' : 'pt'))
+          .forEach(project => {
+            const item = textNode('div', 'insight-project-item');
+            const left = textNode('span', 'insight-legend-name');
+            const dot = textNode('i', 'insight-project-bullet');
+            dot.style.background = colors[key];
+            const url = safeGithubLink(project.url);
+            const name = textNode(url ? 'a' : 'span', 'insight-project-name', project.title);
+            name.title = project.title;
+            if (url) {
+              name.href = url;
+              name.target = '_blank';
+              name.rel = 'noopener noreferrer';
+            }
+            left.append(dot, name);
+            item.append(left);
+            legend.append(item);
+          });
+      }
     });
     if (!total) legend.append(textNode('p', 'insight-no-data', tr('noData')));
   }
@@ -407,7 +371,7 @@
     const host = $('insightTechBars');
     host.replaceChildren();
     const counts = new Map();
-    filtered('tech').forEach(row => row.technologies.forEach(t => {
+    filtered().forEach(row => row.technologies.forEach(t => {
       const key = norm(t);
       const current = counts.get(key);
       counts.set(key, { label: current?.label || t, count: (current?.count || 0) + 1 });
@@ -440,7 +404,7 @@
   function renderStackMap() {
     const host = $('insightStackMap'), summary = $('insightStackSummary');
     host.replaceChildren();
-    const all = filtered('tech').slice().sort((a,b) => a.title.localeCompare(b.title));
+    const all = filtered().slice().sort((a,b) => a.title.localeCompare(b.title));
     const rows = all.slice(0, 18), counts = new Map();
     rows.forEach(p => p.technologies.forEach(t => {
       const key = norm(t), x = counts.get(key);
@@ -494,13 +458,8 @@
   function renderMatrix() {
     const host = $('insightMatrix');
     host.replaceChildren();
-    // Cross-filter context: ignore both category AND era, keep the other filters.
-    const rows = state.rows.filter(r => {
-      if (state.source !== 'all' && r.source !== state.source) return false;
-      if (state.tech && !r.technologies.some(v => norm(v) === norm(state.tech))) return false;
-      if (!matchesTechnologySearch(r)) return false;
-      return true;
-    });
+    // Same selected repositories as all other visualizations.
+    const rows = filtered();
     const eras = ['academica', 'aplicada'];
     host.append(textNode('span', 'insight-matrix-header', ''));
     eras.forEach(e => host.append(textNode('span', 'insight-matrix-header', tr(e === 'academica' ? 'academic' : 'applied'))));
