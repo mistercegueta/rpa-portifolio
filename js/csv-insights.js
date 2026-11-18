@@ -51,6 +51,9 @@
       missingMeta: 'Metadados ausentes são omitidos; zero não é ausência de dado.',
       reset: 'Reiniciar seleção', selectFile: 'Escolher arquivo CSV',
       updated: 'Atualizado em', size: 'Tamanho (KB)', localNotice: 'Itens de curadoria local podem não ter datas e métricas.',
+      coverageTitle: 'Completude dos dados', coverageNote: 'Proporção de repositórios com metadados disponíveis; zero é um valor válido.',
+      coverageCreated: 'Criação', coveragePushed: 'Último push', coverageStars: 'Estrelas',
+      coverageForks: 'Forks', coverageIssues: 'Issues abertas', coverageSize: 'Tamanho',
       closeLabel: 'Fechar'
     },
     en: {
@@ -90,6 +93,9 @@
       missingMeta: 'Missing metrics are omitted; zero is not missing data.',
       reset: 'Reset selection', selectFile: 'Choose CSV file',
       updated: 'Updated', size: 'Size (KB)', localNotice: 'Locally curated records may not have dates or API metrics.',
+      coverageTitle: 'Metadata completeness', coverageNote: 'Share of repositories with available metadata; zero is a valid value.',
+      coverageCreated: 'Created', coveragePushed: 'Last push', coverageStars: 'Stars',
+      coverageForks: 'Forks', coverageIssues: 'Open issues', coverageSize: 'Size',
       closeLabel: 'Close'
     }
   };
@@ -429,6 +435,47 @@
       return u.protocol === 'https:' && u.hostname.toLowerCase() === 'github.com' ? u.href : '';
     } catch { return ''; }
   }
+
+  function renderCoverage() {
+    const host = $('insightCoverage');
+    host.replaceChildren();
+    const rows = filtered();
+    if (!rows.length) { empty(host); return; }
+    const metrics = [
+      ['created', 'coverageCreated'], ['pushed', 'coveragePushed'],
+      ['stars', 'coverageStars'], ['forks', 'coverageForks'],
+      ['issues', 'coverageIssues'], ['size', 'coverageSize']
+    ];
+    const panel = textNode('div', 'insight-coverage-list');
+    metrics.forEach(([field, label]) => {
+      const available = rows.filter(row => row[field] !== null).length;
+      const line = textNode('div', 'insight-coverage-row');
+      const heading = textNode('div', 'insight-coverage-head');
+      heading.append(textNode('span', '', tr(label)),
+        textNode('strong', '', fmt(available) + '/' + fmt(rows.length)));
+      const track = textNode('span', 'insight-coverage-track');
+      const fill = textNode('i', '');
+      fill.style.width = (100 * available / rows.length).toFixed(2) + '%';
+      track.append(fill);
+      line.append(heading, track);
+      panel.append(line);
+    });
+    const sources = textNode('div', 'insight-source-breakdown');
+    [['api','sourceApi'],['local','sourceLocal'],['outros','sourceOther']].forEach(([type,label]) => {
+      const count = filtered('source').filter(row => row.source === type).length;
+      if (!count) return;
+      const button = textNode('button', 'insight-source-chip', tr(label) + ' · ' + fmt(count));
+      button.type = 'button';
+      button.setAttribute('aria-pressed', String(state.source === type));
+      button.addEventListener('click', () => {
+        state.source = state.source === type ? 'all' : type;
+        render();
+      });
+      sources.append(button);
+    });
+    host.append(panel, sources);
+  }
+
   function renderRank() {
     const host = $('insightRank');
     host.replaceChildren();
@@ -479,6 +526,7 @@
     renderTimeline();
     renderMatrix();
     renderRank();
+    renderCoverage();
   }
   function translate() {
     language = document.documentElement.lang.toLowerCase().startsWith('en') ? 'en' : 'pt';
