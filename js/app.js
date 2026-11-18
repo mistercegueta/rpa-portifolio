@@ -185,6 +185,7 @@
     updateSourceLabel();
     updateProjects();
     updateHeroConsoleText();
+    window.dispatchEvent(new CustomEvent('portfolio:language-change', { detail: { language } }));
     if (persist) { try { localStorage.setItem('brandon-rpa-language', language); } catch (_) { /* private mode */ } }
   }
 
@@ -485,6 +486,7 @@ const curatedWithMetadata = curated.map(p => {
     if (executing) return;
     executing = true;
     generatedCsv = null;
+    window.dispatchEvent(new Event('portfolio:inventory-reset'));
     $('#runDemo').disabled = true;
     $('#downloadCsv').disabled = true;
     $('#runDemoLabel').textContent = m().running;
@@ -513,6 +515,7 @@ const curatedWithMetadata = curated.map(p => {
       stageStatus(2, 'done'); progress(75, 'METADATA_READY');
       stageStatus(3, 'active'); await wait(delay);
       generatedCsv = serializeCsv(rows);
+      window.dispatchEvent(new CustomEvent('portfolio:inventory-ready', { detail: { csv: generatedCsv } }));
       $('#metricOutput').textContent = rows.length;
       addLog(m().logCsv(rows.length), 'success');
       stageStatus(3, 'done'); progress(100, 'CSV_READY');
