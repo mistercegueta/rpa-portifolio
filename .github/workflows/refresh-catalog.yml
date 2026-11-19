@@ -1,0 +1,45 @@
+name: Atualizar catálogo GitHub
+
+on:
+  schedule:
+    - cron: '31 */3 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/refresh-catalog.yml'
+      - 'js/catalog.js'
+      - 'js/projects.js'
+      - 'scripts/refresh-catalog.cjs'
+
+concurrency:
+  group: refresh-portfolio-catalog
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Consultar repositórios públicos
+        run: node scripts/refresh-catalog.cjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Publicar somente se o catálogo mudou
+        run: |
+          git add -- catalog/repos.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(catalogo): sincronizar repositórios públicos'
+          git pull --rebase origin main
+          git push origin HEAD:main

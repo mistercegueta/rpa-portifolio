@@ -7,28 +7,31 @@
   'use strict';
   document.documentElement.classList.add('js-enabled');
   const config = window.PORTFOLIO_CONFIG;
-  if (!config) return;
+  const catalog = window.PORTFOLIO_CATALOG;
+  if (!config || !catalog) return;
+  const { normalize, dateValue, newestFirst, listPublicRepositories, buildProjects, readSnapshot } = catalog;
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-  const repoBase = `https://github.com/${config.githubUsername}/`;
   const dictionary = window.PORTFOLIO_I18N || {};
   const curated = config.curatedProjects.map((project) => ({ ...project, source: 'curated', meta: null }));
-  const excluded = new Set((config.excludedRepositories || []).map(name => name.toLowerCase()));
   let allProjects = [...curated];
   let githubRepoCount = null;
-  let githubConnected = false;
-  let lastSyncError = '';
+  let source = 'curated';
+  let snapshotDate = '';
+  let lastSync = 0;
+  let checkingGitHub = false;
   let activeRequest = null;
   let activeFilter = 'todos';
   let activeEra = 'ambas';
+  let activeSort = 'recent';
   let searchTerm = '';
   let generatedCsv = null;
   let executing = false;
   let language = 'pt';
 
   /* ========= Full interface localization ========= */
-  const ignoreStatic = '#projectSource,#projectResult,#projectSyncText,#allCount,#appliedCount,#academicCount,#projectGrid,#appliedGrid,#academicGrid,#demoLog,#demoState,#demoProgress,#demoProgressLabel,#runDemoLabel,#heroConsole,#metricInput,#metricValid,#metricOutput,#languageSwitch';
+  const ignoreStatic = '#projectSource,#projectResult,#projectSyncText,#refreshProjects,#projectGrid,#demoLog,#demoState,#demoProgress,#demoProgressLabel,#runDemoLabel,#heroConsole,#metricInput,#metricValid,#metricOutput,#languageSwitch';
   const textRecords = [];
   const attrRecords = [];
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -54,7 +57,7 @@
     'Representação animada de um fluxo automatizado com etapas de entrada, processamento e entrega': 'Animated representation of an automated workflow with input, processing and output stages',
     'Tecnologias e especialidades': 'Technologies and areas of expertise',
     'Filtrar projetos por especialidade': 'Filter projects by area',
-    'Filtrar projetos por período': 'Filter projects by era',
+    'Filtrar projetos por contexto': 'Filter projects by context',
     'Buscar projetos': 'Search projects',
     'Buscar projeto ou tecnologia...': 'Search projects or technologies...',
     'Terminal de demonstração de automação': 'Automation catalog terminal',
@@ -64,17 +67,15 @@
   const messages = {
     pt: {
       projects: n => `${n} projeto${n === 1 ? '' : 's'} encontrado${n === 1 ? '' : 's'}`,
-      counter: n => `${String(n).padStart(2, '0')} PROJETO${n === 1 ? '' : 'S'}`,
-      repoLink: 'VER REPOSITÓRIO',
+      repoLink: 'Ver repositório',
       linkLabel: title => `Ver projeto ${title} no GitHub (abre nova guia)`,
-      sourceLocal: ' CATÁLOGO LOCAL / SEM SINCRONIZAÇÃO',
-      sourceGitHub: ' GITHUB CONECTADO / CATÁLOGO ATUALIZADO',
-      sourceFailed: ' GITHUB INDISPONÍVEL / CATÁLOGO LOCAL',
-      syncOk: n => `${n} repositórios públicos consultados`,
-      syncFailed: 'API indisponível; mantendo projetos cadastrados',
-      contextLabel: 'CONTEXTO',
-      updatedLabel: 'ATUALIZADO',
-      newProjectDesc: 'Repositório público identificado pelos metadados de automação. Consulte o código e a documentação no GitHub.',
+      sourceLocal: 'Curadoria local', sourceGitHub: 'Sincronizado com o GitHub',
+      sourceSnapshot: 'Cópia do catálogo', sourceChecking: 'Consultando GitHub…',
+      syncOk: (n, time) => `${n} repositórios consultados · ${time}`,
+      syncSnapshot: date => `API indisponível · versão de ${date}`,
+      syncFailed: 'API indisponível · projetos selecionados',
+      refresh: 'Sincronizar', refreshing: 'Sincronizando…',
+      createdLabel: 'Criado em', recent: 'Novo', release: 'Downloads',
       run: '▶  Gerar inventário',
       running: '⟳  Consultando GitHub...',
       again: '↻  Atualizar inventário',
@@ -84,35 +85,32 @@
       failed: 'ERRO NA EXPORTAÇÃO',
       logStart: 'Iniciando consulta aos repositórios públicos...',
       logOnline: n => `GitHub respondeu: ${n} repositórios públicos consultados.`,
-      logOffline: 'API indisponível; usando o catálogo local ou a última sincronização válida.',
-      logFilter: n => `${n} projetos de automação identificados; itens excluídos não entram no inventário.`,
+      logOffline: 'API indisponível. O inventário usa a cópia disponível do catálogo.',
+      logFilter: n => `${n} projetos elegíveis incluídos no inventário.`,
       logEnrich: n => `${n} projetos organizados com categorias, eras, tecnologias e metadados disponíveis.`,
       logCsv: n => `CSV preparado: ${n} projetos. Arquivo gerado a partir do catálogo atual.`,
       logError: 'Não foi possível preparar o inventário. Tente novamente.',
       logDownload: 'Download do inventário CSV iniciado.',
       heroLines: [
         'github.repos() → consultando metadados',
-        'repository.filter() → detectando automações',
+        'repository.filter() → selecionando projetos públicos',
         'catalog.enrich() → organizando projetos',
         'inventory.export() → CSV disponível',
         'system.monitor() → aguardando atualização'
       ],
-      offlineDescription: 'Sem descrição cadastrada.',
-      unknown: 'Não informado'
+      offlineDescription: 'Consulte a documentação e o código no GitHub.'
     },
     en: {
       projects: n => `${n} project${n === 1 ? '' : 's'} found`,
-      counter: n => `${String(n).padStart(2, '0')} PROJECT${n === 1 ? '' : 'S'}`,
-      repoLink: 'VIEW REPOSITORY',
+      repoLink: 'View repository',
       linkLabel: title => `View ${title} on GitHub (opens in a new tab)`,
-      sourceLocal: ' LOCAL CATALOG / NOT SYNCED',
-      sourceGitHub: ' GITHUB CONNECTED / CATALOG UPDATED',
-      sourceFailed: ' GITHUB UNAVAILABLE / LOCAL CATALOG',
-      syncOk: n => `${n} public repositories checked`,
-      syncFailed: 'API unavailable; using curated projects',
-      contextLabel: 'CONTEXT',
-      updatedLabel: 'UPDATED',
-      newProjectDesc: 'Public repository identified through automation-related metadata. See its code and documentation on GitHub.',
+      sourceLocal: 'Curated projects', sourceGitHub: 'Synced with GitHub',
+      sourceSnapshot: 'Saved catalog', sourceChecking: 'Checking GitHub…',
+      syncOk: (n, time) => `${n} repositories checked · ${time}`,
+      syncSnapshot: date => `API unavailable · version from ${date}`,
+      syncFailed: 'API unavailable · selected projects',
+      refresh: 'Sync now', refreshing: 'Syncing…',
+      createdLabel: 'Created', recent: 'New', release: 'Downloads',
       run: '▶  Build inventory',
       running: '⟳  Checking GitHub...',
       again: '↻  Refresh inventory',
@@ -122,29 +120,29 @@
       failed: 'EXPORT ERROR',
       logStart: 'Querying public repositories...',
       logOnline: n => `GitHub responded: ${n} public repositories checked.`,
-      logOffline: 'API unavailable; using the local catalog or the last valid synchronization.',
-      logFilter: n => `${n} automation projects identified; excluded items are not exported.`,
+      logOffline: 'API unavailable. The inventory uses the available catalog copy.',
+      logFilter: n => `${n} eligible projects included in the inventory.`,
       logEnrich: n => `${n} projects enriched with categories, eras, technologies and available metadata.`,
       logCsv: n => `CSV ready: ${n} projects. The file reflects the current catalog.`,
       logError: 'Could not prepare the inventory. Please retry.',
       logDownload: 'CSV inventory download started.',
       heroLines: [
         'github.repos() → fetching metadata',
-        'repository.filter() → finding automations',
+        'repository.filter() → selecting public projects',
         'catalog.enrich() → organizing projects',
         'inventory.export() → CSV available',
         'system.monitor() → waiting for updates'
       ],
-      offlineDescription: 'No description provided.',
-      unknown: 'Not provided'
+      offlineDescription: 'See the documentation and code on GitHub.'
     }
   };
   const m = () => messages[language];
-  const normalize = value => String(value ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   function formatDate(iso) {
-    if (!iso) return '';
-    const d = new Date(iso);
-    return Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'pt-BR', { year: 'numeric', month: 'short', day: 'numeric' }).format(d);
+    const value = dateValue(iso);
+    if (!value) return '';
+    return new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'pt-BR', {
+      dateStyle: 'medium', timeZone: 'America/Sao_Paulo'
+    }).format(value);
   }
   function translateStatic(lang) {
     for (const record of textRecords) {
@@ -192,97 +190,92 @@
   /* ========= Project gallery + eras ========= */
   const symbols = { bot: '⌘', data: '⋈', scrape: '⌗', message: '✉', database: '▤', telegram: '◈', workflow: '◇', generic: '⟡' };
   const labels = {
-    pt: { bots: 'BOTS E ASSISTENTES', web: 'EXTRAÇÃO DE CONTEÚDO', dados: 'DADOS E INTEGRAÇÃO', fluxos: 'AUTOMAÇÃO DE ROTINAS' },
-    en: { bots: 'BOTS AND ASSISTANTS', web: 'CONTENT EXTRACTION', dados: 'DATA AND INTEGRATION', fluxos: 'WORKFLOW AUTOMATION' }
+    pt: { bots: 'Bots e assistentes', web: 'Extração de conteúdo', dados: 'Dados e integração', fluxos: 'Automação de rotinas', outros: 'Outros projetos' },
+    en: { bots: 'Bots and assistants', web: 'Content extraction', dados: 'Data and integration', fluxos: 'Workflow automation', outros: 'Other projects' }
   };
-  const eraText = { pt: { aplicada: 'APLICAÇÕES', academica: 'FACULDADE' }, en: { aplicada: 'APPLIED', academica: 'UNIVERSITY' } };
+  const eraText = { pt: { aplicada: 'Aplicação', academica: 'Faculdade' }, en: { aplicada: 'Applied', academica: 'University' } };
+  const categoryVisuals = { bots: 'bot', web: 'scrape', dados: 'database', fluxos: 'workflow' };
   function element(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
     if (text !== undefined) node.textContent = String(text ?? '');
     return node;
   }
-  function safeRepoUrl(url, name) {
-    try {
-      const u = new URL(url);
-      if (u.protocol === 'https:' && u.hostname === 'github.com' && u.pathname.toLowerCase().startsWith('/' + config.githubUsername.toLowerCase() + '/')) return u.href;
-    } catch (_) { /* invalid URL */ }
-    return repoBase + encodeURIComponent(name);
+  function projectDescription(project) {
+    return (language === 'en' ? project.description_en : project.description) || project.originalDescription || m().offlineDescription;
   }
-  function getEra(p) {
-    if (p.era === 'aplicada' || p.era === 'academica') return p.era;
+  function renderProject(p) {
     const createdAt = p.meta?.created_at;
-    if (!createdAt) return 'aplicada';
-    const cutoff = new Date();
-    cutoff.setFullYear(cutoff.getFullYear() - 2);
-    return new Date(createdAt) < cutoff ? 'academica' : 'aplicada';
-  }
-  function renderProject(p, index) {
-    const era = getEra(p);
-    const card = element('article', `project-card${p.feature ? ' is-featured' : ''}`);
+    const created = formatDate(createdAt);
+    const age = Date.now() - dateValue(createdAt);
+    const recent = age >= 0 && age < 30 * 86400000;
+    const card = element('article', `project-card${p.feature ? ' is-featured' : ''}${recent ? ' is-recent' : ''}`);
     const top = element('div', 'project-card-top');
-    top.append(element('span', 'project-index', `PRJ_${String(index + 1).padStart(2, '0')}`));
     top.append(element('span', 'project-type', (language === 'en' ? p.eyebrow_en : p.eyebrow) || labels[language][p.category]));
+    if (recent) top.append(element('span', 'project-new', m().recent));
     card.append(top);
     const graphic = element('div', 'project-graphic');
     graphic.setAttribute('aria-hidden', 'true');
-    graphic.append(element('span', 'project-graphic-code', 'FLOW://' + (p.category || 'RPA').toUpperCase()));
-    graphic.append(element('span', 'project-glyph', symbols[p.visual] || symbols.generic));
-    graphic.append(element('span', 'project-graphic-pulse', '● AUTOMATED'));
+    graphic.append(element('span', 'project-glyph', symbols[p.visual || categoryVisuals[p.category]] || symbols.generic));
     card.append(graphic);
-    const strip = element('div', 'project-era-line');
-    strip.append(element('span', 'project-era-pill', `ERA ${era === 'aplicada' ? '02' : '01'} · ${eraText[language][era]}`));
-    if (p.context) strip.append(element('span', 'project-context', p.context));
-    card.append(strip);
+    if (p.era || p.context) {
+      const strip = element('div', 'project-era-line');
+      if (p.era) strip.append(element('span', 'project-era-pill', eraText[language][p.era]));
+      if (p.context) strip.append(element('span', 'project-context', language === 'en' ? p.context_en || p.context : p.context));
+      card.append(strip);
+    }
     card.append(element('h3', null, p.title));
-    card.append(element('p', null, (language === 'en' ? p.description_en : p.description) || m().newProjectDesc));
-    const tags = element('div', 'project-tags');
-    (p.tags || []).slice(0, 4).forEach(tag => tags.append(element('span', null, tag)));
-    card.append(tags);
-    if (p.meta?.updated_at) card.append(element('div', 'project-updated', `${m().updatedLabel}: ${formatDate(p.meta.updated_at)}`));
+    card.append(element('p', null, projectDescription(p)));
+    if (p.tags?.length) {
+      const tags = element('div', 'project-tags');
+      p.tags.slice(0, 4).forEach(tag => tags.append(element('span', null, tag)));
+      card.append(tags);
+    }
+    if (created) {
+      const date = element('div', 'project-created');
+      const time = element('time', null, created);
+      time.dateTime = createdAt;
+      date.append(`${m().createdLabel} `, time);
+      card.append(date);
+    }
+    const actions = element('div', 'project-card-actions');
     const link = element('a', 'project-card-link');
-    link.href = safeRepoUrl(p.url, p.repo);
+    link.href = p.url;
     link.target = '_blank'; link.rel = 'noopener noreferrer';
     link.setAttribute('aria-label', m().linkLabel(p.title));
-    link.append(element('span', null, m().repoLink), element('span', 'arrow', '↗'));
-    card.append(link);
+    link.textContent = m().repoLink;
+    actions.append(link);
+    if (p.release) {
+      const release = element('a', 'project-release', m().release);
+      release.href = p.release;
+      release.target = '_blank'; release.rel = 'noopener noreferrer';
+      actions.append(release);
+    }
+    card.append(actions);
     return card;
   }
-  /**
-   * Checks era and search first, so the "All" counter shows how many projects
-   * are available in the selected era (and search), regardless of the active
-   * specialty tab. The visible cards apply the specialty filter as well.
-   */
-  function matchesSelection(project, includeSpecialty = true) {
-    if (activeEra !== 'ambas' && getEra(project) !== activeEra) return false;
-    if (includeSpecialty && activeFilter !== 'todos' && project.category !== activeFilter) return false;
+  function matchesSelection(project) {
+    if (activeEra !== 'ambas' && (project.era || 'github') !== activeEra) return false;
+    if (activeFilter !== 'todos' && project.category !== activeFilter) return false;
     if (!searchTerm) return true;
     const searchable = [
-      project.title, project.repo, project.description, project.description_en,
+      project.title, project.repo, project.owner, project.description, project.description_en, project.originalDescription,
       project.eyebrow, project.eyebrow_en, project.context,
       ...(project.tags || []), ...(project.meta?.topics || [])
     ].join(' ');
-    return normalize(searchable).includes(normalize(searchTerm));
-  }
-  function filteredProjects() {
-    return allProjects.filter(project => matchesSelection(project));
-  }
-  function renderEra(gridSelector, era, projects) {
-    const grid = $(gridSelector);
-    const frag = document.createDocumentFragment();
-    projects.forEach((p, index) => frag.append(renderProject(p, index)));
-    grid.replaceChildren(frag);
-    $(`.projects-era[data-era="${era}"]`).hidden = !projects.length || (activeEra !== 'ambas' && activeEra !== era);
-    $('#' + (era === 'aplicada' ? 'appliedCount' : 'academicCount')).textContent = m().counter(projects.length);
+    const text = normalize(searchable);
+    return normalize(searchTerm).split(/\s+/).every(term => text.includes(term));
   }
   function updateProjects() {
-    const list = filteredProjects();
-    const applied = list.filter(p => getEra(p) === 'aplicada');
-    const academic = list.filter(p => getEra(p) === 'academica');
-    renderEra('#appliedGrid', 'aplicada', applied);
-    renderEra('#academicGrid', 'academica', academic);
-    // The count belongs to the current era/search, not the global repository list.
-    $('#allCount').textContent = String(allProjects.filter(project => matchesSelection(project, false)).length).padStart(2, '0');
+    const list = allProjects.filter(project => matchesSelection(project));
+    const locale = language === 'en' ? 'en' : 'pt-BR';
+    if (activeSort === 'name') list.sort((a, b) => a.title.localeCompare(b.title, locale));
+    else list.sort(activeSort === 'old' ? (a, b) => {
+      const aTime = dateValue(a.meta?.created_at) || Infinity;
+      const bTime = dateValue(b.meta?.created_at) || Infinity;
+      return aTime - bTime || a.title.localeCompare(b.title, locale);
+    } : newestFirst);
+    $('#projectGrid').replaceChildren(...list.map(renderProject));
     $('#projectResult').textContent = m().projects(list.length);
     $('#projectEmpty').hidden = !!list.length;
   }
@@ -298,123 +291,70 @@
       updateProjects();
     }));
     $('#projectSearch').addEventListener('input', event => { searchTerm = event.target.value.trim(); updateProjects(); });
+    $('#projectSort').addEventListener('change', event => { activeSort = event.target.value; updateProjects(); });
     $('#resetFilters').addEventListener('click', () => {
-      activeEra = 'ambas'; searchTerm = '';
+      searchTerm = '';
       $('#projectSearch').value = '';
       $('.era-button[data-era-filter="ambas"]').click();
       $('.filter[data-filter="todos"]').click();
       $('#projectSearch').focus();
     });
+    $('#refreshProjects').addEventListener('click', syncGitHubProjects);
   }
 
-  /* ========= GitHub API: fetch + metadata enrichment + discovery ========= */
-  const automationTerms = /rpa|robot|automat|automati|\bbot\b|[_-]bot|telegram|selenium|playwright|pyautogui|scrap|crawler|crawl|pipeline|ingest|\betl\b|indexa|elastic|workflow|lattes|data.?extract|extract|bpmn|integrac|integration|task.?schedul|process.?flow/i;
-  function isAutomationRepo(repo) {
-    if (!repo || typeof repo.name !== 'string' || repo.fork || repo.archived) return false;
-    if (excluded.has(repo.name.toLowerCase())) return false;
-    const text = normalize([repo.name, repo.description, ...(Array.isArray(repo.topics) ? repo.topics : [])].join(' '));
-    if (/gift.?cards?|cartoes|cart[oõ]es|portfolio|portf[oó]lio|personal.website|personal.site/.test(text)) return false;
-    return automationTerms.test(text);
+  /* ========= Live GitHub catalog and published fallback ========= */
+  function applyCatalog(repositories, date, nextSource, count = repositories.length) {
+    if (nextSource === 'snapshot' && dateValue(date) <= dateValue(snapshotDate)) return;
+    allProjects = buildProjects(config, repositories);
+    githubRepoCount = count;
+    snapshotDate = date;
+    source = nextSource;
+    updateProjects();
   }
-  function classifyRepo(repo) {
-    const text = normalize([repo.name, repo.description, ...(repo.topics || [])].join(' '));
-    if (/scrap|craw|selenium|playwright|browser|threads/.test(text)) return 'web';
-    if (/elastic|pipeline|ingest|\betl\b|indexa|analyt|data.?engineer|data.?science|tratamento de dados/.test(text)) return 'dados';
-    if (/bot\b|telegram|whatsapp|mensag|message/.test(text)) return 'bots';
-    return 'fluxos';
+
+  async function loadSnapshot(url) {
+    try {
+      const response = await fetch(url, { cache: 'no-cache', signal: AbortSignal.timeout(4000) });
+      if (!response.ok) return;
+      const snapshot = readSnapshot(await response.json());
+      applyCatalog(snapshot.repositories, snapshot.generatedAt, 'snapshot', snapshot.repositoryCount);
+    } catch (_) { /* Keep the current catalog if the copy is unavailable. */ }
   }
-  function extractMeta(r) {
-    return {
-      created_at: r.created_at || '', updated_at: r.updated_at || '', pushed_at: r.pushed_at || '',
-      language: r.language || '', topics: Array.isArray(r.topics) ? r.topics : [],
-      stars: Number.isFinite(r.stargazers_count) ? r.stargazers_count : null,
-      forks: Number.isFinite(r.forks_count) ? r.forks_count : null,
-      open_issues: Number.isFinite(r.open_issues_count) ? r.open_issues_count : null,
-      size_kb: Number.isFinite(r.size) ? r.size : null
-    };
-  }
-  function fromGitHub(repo) {
-    const category = classifyRepo(repo);
-    const sourceDescription = repo.description?.trim() || '';
-    const writtenInPortuguese = /\b(automação|automatização|coleta|extração|projeto|dados|processamento|utilizando|desenvolvimento|ferramenta|integração|repositório|realiza|permite|análise|consulta|gestão|plataforma|sistema)\b/i.test(sourceDescription);
-    const summaryPt = `Repositório de ${labels.pt[category].toLowerCase()}. Consulte a descrição original e o código-fonte no GitHub.`;
-    const summaryEn = `Public ${labels.en[category].toLowerCase()} repository. See the original description and source code on GitHub.`;
-    return {
-      repo: repo.name,
-      title: repo.name.replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
-      category,
-      eyebrow: labels.pt[category], eyebrow_en: labels.en[category],
-      visual: { bots: 'bot', web: 'scrape', dados: 'database', fluxos: 'workflow' }[category],
-      // Automated discoveries preserve the original description in CSV. The interface
-      // uses a neutral translated summary when the source language differs.
-      description: sourceDescription && writtenInPortuguese ? sourceDescription : summaryPt,
-      description_en: sourceDescription && !writtenInPortuguese ? sourceDescription : summaryEn,
-      originalDescription: sourceDescription,
-      tags: [repo.language || 'Open source', ...(repo.topics || []).slice(0, 3)],
-      url: repo.html_url, source: 'github', meta: extractMeta(repo)
-    };
-  }
+
   function updateSourceLabel() {
-    const label = $('#projectSource');
-    const previous = label.querySelector('.meta-dot');
-    label.replaceChildren(previous || element('span', 'meta-dot'), document.createTextNode(
-      githubConnected ? m().sourceGitHub : lastSyncError ? m().sourceFailed : m().sourceLocal
-    ));
-    label.querySelector('.meta-dot').classList.toggle('online', githubConnected);
-    $('#projectSyncText').textContent = githubConnected && githubRepoCount !== null ? m().syncOk(githubRepoCount) : lastSyncError ? m().syncFailed : language === 'en' ? 'Selected projects' : 'Projetos selecionados';
+    const text = checkingGitHub ? m().sourceChecking
+      : { live: m().sourceGitHub, snapshot: m().sourceSnapshot, curated: m().sourceLocal }[source];
+    $('#projectSourceText').textContent = text;
+    $('#projectSource .meta-dot').classList.toggle('online', source === 'live' && !checkingGitHub);
+    const time = source === 'live' ? new Intl.DateTimeFormat(language === 'en' ? 'en-US' : 'pt-BR', {
+      timeStyle: 'short', timeZone: 'America/Sao_Paulo'
+    }).format(dateValue(snapshotDate)) : '';
+    $('#projectSyncText').textContent = checkingGitHub ? ''
+      : source === 'live' ? m().syncOk(githubRepoCount, time)
+      : source === 'snapshot' ? m().syncSnapshot(formatDate(snapshotDate)) : m().syncFailed;
+    const button = $('#refreshProjects');
+    button.textContent = checkingGitHub ? m().refreshing : m().refresh;
+    button.setAttribute('aria-disabled', String(checkingGitHub));
   }
-  async function syncGitHubProjects() {
+
+  function syncGitHubProjects() {
     if (activeRequest) return activeRequest;
+    checkingGitHub = true;
+    lastSync = Date.now();
+    updateSourceLabel();
     activeRequest = (async () => {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 12000);
       try {
-        let repos = [];
-        for (let page = 1; page <= 5; page++) {
-          const url = `https://api.github.com/users/${encodeURIComponent(config.githubUsername)}/repos?per_page=100&page=${page}&sort=updated&direction=desc`;
-          const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'application/vnd.github+json' }, cache: 'no-cache' });
-          if (!response.ok) throw new Error(`GitHub API HTTP ${response.status}`);
-          const part = await response.json();
-          if (!Array.isArray(part)) throw new Error('Invalid GitHub API response');
-          repos.push(...part);
-          if (part.length < 100) break;
-        }
-        const known = new Map(repos.map(repo => [repo.name.toLowerCase(), repo]));
-
-const curatedWithMetadata = curated.map(p => {
-  const remote = known.get(p.repo.toLowerCase());
-
-  if (!remote) {
-    return { ...p };
-  }
-
-  return {
-    ...p,
-    meta: extractMeta(remote),
-    originalDescription: remote.description ?? ''
-  };
-});
-
-        const curatedNames = new Set(curated.map(p => p.repo.toLowerCase()));
-        const discovered = repos.filter(isAutomationRepo)
-          .filter(r => !curatedNames.has(r.name.toLowerCase())).map(fromGitHub);
-        // Keep the curator's context override even if a repository is older than two years.
-        allProjects = [...curatedWithMetadata, ...discovered];
-        githubRepoCount = repos.length;
-        githubConnected = true;
-        lastSyncError = '';
-        updateProjects();
-        updateSourceLabel();
-        return { ok: true, count: repos.length, matched: allProjects.length };
-      } catch (err) {
-        lastSyncError = String(err?.message || 'Request failed');
-        githubConnected = false;
-        // Retain last successful catalog if one was previously loaded.
-        updateSourceLabel();
-        return { ok: false, count: githubRepoCount, matched: allProjects.length };
+        const repositories = await listPublicRepositories(config.githubAccounts, { signal: AbortSignal.timeout(8000) });
+        applyCatalog(repositories, new Date().toISOString(), 'live');
+        return { ok: true, count: githubRepoCount };
+      } catch (_) {
+        if (source === 'live') source = 'snapshot';
+        await Promise.all([initialSnapshot, loadSnapshot(config.snapshotUrl)]);
+        return { ok: false, count: githubRepoCount };
       } finally {
-        clearTimeout(timer);
+        checkingGitHub = false;
         activeRequest = null;
+        updateSourceLabel();
       }
     })();
     return activeRequest;
@@ -425,9 +365,9 @@ const curatedWithMetadata = curated.map(p => {
     const time = new Date().toISOString();
     return allProjects.map(p => ({
       repo: p.repo, titulo: p.title, categoria: labels[language][p.category] || p.category,
-      era: `${getEra(p) === 'academica' ? '01' : '02'} / ${eraText[language][getEra(p)]}`,
+      era: eraText[language][p.era] || '',
       contexto: language === 'en' ? p.context_en || p.context || '' : p.context || '',
-      descricao: (language === 'en' ? p.description_en : p.description) || '',
+      descricao: (language === 'en' ? p.description_en : p.description) || p.originalDescription || '',
       descricao_original: p.originalDescription || '',
       assunto: labels[language][p.category] || p.category,
       linguagem: p.meta?.language || '', tecnologias: (p.tags || []).join(' | '),
@@ -436,7 +376,7 @@ const curatedWithMetadata = curated.map(p => {
       ultimo_push: p.meta?.pushed_at || '', estrelas: p.meta?.stars ?? '',
       forks: p.meta?.forks ?? '', issues_abertas: p.meta?.open_issues ?? '',
       tamanho_kb: p.meta?.size_kb ?? '',
-      url: safeRepoUrl(p.url, p.repo),
+      url: p.url,
       fonte: p.meta ? 'GitHub API' : (language === 'en' ? 'Local catalog (dates unavailable)' : 'Curadoria local (datas indisponíveis)'),
       exportado_em: time
     }));
@@ -501,7 +441,7 @@ const curatedWithMetadata = curated.map(p => {
       stageStatus(0, 'active');
       addLog(m().logStart);
       const result = await syncGitHubProjects();  // Always checks the source again on run.
-      $('#metricInput').textContent = result.count ?? allProjects.length;
+      $('#metricInput').textContent = result.count ?? '—';
       addLog(result.ok ? m().logOnline(result.count) : m().logOffline, result.ok ? 'success' : 'warning');
       stageStatus(0, 'done'); progress(25, 'FETCH_COMPLETE');
       stageStatus(1, 'active'); await wait(delay);
@@ -770,5 +710,10 @@ const curatedWithMetadata = curated.map(p => {
   let storedLang = null;
   try { storedLang = localStorage.getItem('brandon-rpa-language'); } catch (_) { /* storage disabled */ }
   setLanguage(storedLang === 'en' ? 'en' : 'pt', false);
+  const initialSnapshot = loadSnapshot('./catalog/repos.json');
   syncGitHubProjects();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && Date.now() - lastSync > 5 * 60 * 1000) syncGitHubProjects();
+  });
+  window.addEventListener('online', syncGitHubProjects);
 })();

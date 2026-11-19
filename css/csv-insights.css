@@ -92,7 +92,7 @@
 .insight-bar-top strong{color:var(--cyan);font:10px var(--mono)}
 .insight-bar-track,.insight-rank-track{height:5px;background:#2b2c43;display:block;overflow:hidden}
 .insight-bar-fill{display:block;height:100%;background:linear-gradient(90deg,#8267e8,#bfaaff)}
-.insight-matrix{display:grid;grid-template-columns:minmax(100px,1.3fr) repeat(2,minmax(75px,1fr));gap:7px;align-items:stretch}
+.insight-matrix{display:grid;grid-template-columns:minmax(64px,1.3fr) repeat(3,minmax(0,1fr));gap:7px;align-items:stretch}
 .insight-matrix-header{font:9px var(--mono);color:#9899bc;text-align:center;padding:5px 0}
 .insight-matrix-rowlabel{font:11px var(--display);color:#e8e7f9;display:flex;align-items:center}
 .insight-matrix-cell{min-height:37px;border:1px solid rgba(165,139,255,.36);

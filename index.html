@@ -16,10 +16,13 @@
 <link href="https://fonts.googleapis.com" rel="preconnect"/>
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-<link href="./css/styles.css" rel="stylesheet"/>
-<link href="./css/csv-insights.css" rel="stylesheet"/>
-<script defer="" src="./js/projects.js"></script>
-<script defer="" src="./js/i18n.js"></script><script defer="" src="./js/app.js"></script><script defer="" src="./js/csv-insights.js"></script>
+<link href="./css/styles.css?v=2" rel="stylesheet"/>
+<link href="./css/csv-insights.css?v=2" rel="stylesheet"/>
+<script defer="" src="./js/projects.js?v=2"></script>
+<script defer="" src="./js/catalog.js"></script>
+<script defer="" src="./js/i18n.js?v=2"></script>
+<script defer="" src="./js/app.js?v=2"></script>
+<script defer="" src="./js/csv-insights.js?v=2"></script>
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Ir para conteúdo</a>
@@ -107,32 +110,74 @@
 </section>
 <section aria-labelledby="projectsTitle" class="section section-projects" id="projetos">
 <div class="container">
-<div class="section-heading" data-reveal=""><div class="section-kicker"><span class="section-number">02/</span> REPOSITÓRIOS &amp; HISTÓRICO</div><div class="heading-split"><h2 id="projectsTitle">Projetos por <span>fase.</span></h2><p>Separei a produção acadêmica das aplicações em outros contextos. A vitrine consulta os repositórios públicos no GitHub e inclui novas automações identificadas por seus metadados.</p></div></div>
-<div aria-label="Filtrar projetos por período" class="era-switch" role="group">
-<button aria-pressed="true" class="era-button active" data-era-filter="ambas" type="button"><span class="era-switch-icon">◈</span> Duas eras</button>
-<button aria-pressed="false" class="era-button" data-era-filter="aplicada" type="button">02 / Aplicações</button>
-<button aria-pressed="false" class="era-button" data-era-filter="academica" type="button">01 / Faculdade</button>
-</div><div class="project-tools" data-reveal=""><div aria-label="Filtrar projetos por especialidade" class="filter-list" role="group"><button aria-pressed="true" class="filter active" data-filter="todos" type="button">Todos <span id="allCount">06</span></button><button aria-pressed="false" class="filter" data-filter="bots" type="button">Bots &amp; RPA</button><button aria-pressed="false" class="filter" data-filter="web" type="button">Web scraping</button><button aria-pressed="false" class="filter" data-filter="dados" type="button">Data &amp; ETL</button><button aria-pressed="false" class="filter" data-filter="fluxos" type="button">Workflows</button></div><label class="project-search"><span aria-hidden="true">⌕</span><span class="sr-only">Buscar projetos</span><input autocomplete="off" id="projectSearch" placeholder="Buscar projeto ou tecnologia..." type="search"/></label></div>
-<div class="project-meta"><span id="projectSource"><span class="meta-dot"></span> CURADORIA LOCAL ATIVA</span><span aria-live="polite" id="projectResult" role="status">06 projetos encontrados</span></div>
-<div class="era-sections" id="eraSections">
-<section aria-labelledby="eraAppliedTitle" class="projects-era projects-era-applied" data-era="aplicada">
-<div class="era-heading"><div aria-hidden="true" class="era-orbit"><span>02</span></div><div class="era-heading-main"><span class="era-eyebrow">ERA 02 / APLICAÇÕES</span><h3 id="eraAppliedTitle">Aplicações &amp; pesquisa</h3><p>Automações desenvolvidas em experiências de trabalho, pesquisas independentes e projetos mais recentes.</p></div><span class="era-counter" id="appliedCount">00 PROJETOS</span></div>
-<div class="project-grid" id="appliedGrid"></div></section>
-<section aria-labelledby="eraAcademicTitle" class="projects-era projects-era-academic" data-era="academica">
-<div class="era-heading"><div aria-hidden="true" class="era-orbit"><span>01</span></div><div class="era-heading-main"><span class="era-eyebrow">ERA 01 / FORMAÇÃO</span><h3 id="eraAcademicTitle">Laboratório acadêmico</h3><p>Experimentos e projetos de automação desenvolvidos durante a faculdade, com foco em aprender e testar ferramentas.</p></div><span class="era-counter" id="academicCount">00 PROJETOS</span></div>
-<div class="project-grid" id="academicGrid"></div></section></div>
-<div class="empty-state" hidden="" id="projectEmpty"><span>NO_MATCH.EXE</span><h3>Nenhum projeto encontrado</h3><p>Tente outra busca ou selecione “Todos”.</p><button class="button button-ghost" id="resetFilters" type="button">Limpar filtros ↗</button></div>
-<div class="projects-footer"><span>REPOSITÓRIOS PÚBLICOS • <span id="projectSyncText">Projetos selecionados</span></span><a class="text-link" href="https://github.com/BrandonSaraiva?tab=repositories" rel="noopener noreferrer" target="_blank">Explorar GitHub completo <span aria-hidden="true">↗</span></a></div>
+<div class="section-heading" data-reveal="">
+  <div class="section-kicker">PORTFÓLIO DE PROJETOS</div>
+  <div class="heading-split">
+    <h2 id="projectsTitle">Conheça meus <span>projetos.</span></h2>
+    <p>Automações, trabalhos acadêmicos e projetos independentes. O catálogo acompanha meus repositórios públicos no GitHub.</p>
+  </div>
+</div>
+<div class="project-controls">
+  <div class="project-tools">
+    <label class="project-search">
+      <span aria-hidden="true">⌕</span><span class="sr-only">Buscar projetos</span>
+      <input autocomplete="off" id="projectSearch" placeholder="Buscar projeto ou tecnologia..." type="search"/>
+    </label>
+    <label class="project-sort">
+      <span class="sr-only">Ordenar projetos</span>
+      <select id="projectSort">
+        <option value="recent">Mais recentes</option>
+        <option value="old">Mais antigos</option>
+        <option value="name">Nome (A–Z)</option>
+      </select>
+    </label>
+  </div>
+  <div class="project-filter-groups">
+    <div aria-label="Filtrar projetos por especialidade" class="filter-list" role="group">
+      <button aria-pressed="true" class="filter active" data-filter="todos" type="button">Todos os tipos</button>
+      <button aria-pressed="false" class="filter" data-filter="bots" type="button">Bots</button>
+      <button aria-pressed="false" class="filter" data-filter="web" type="button">Extração web</button>
+      <button aria-pressed="false" class="filter" data-filter="dados" type="button">Dados &amp; ETL</button>
+      <button aria-pressed="false" class="filter" data-filter="fluxos" type="button">Automações</button>
+      <button aria-pressed="false" class="filter" data-filter="outros" type="button">Outros</button>
+    </div>
+    <div aria-label="Filtrar projetos por contexto" class="era-switch" role="group">
+      <button aria-pressed="true" class="era-button active" data-era-filter="ambas" type="button">Todos os contextos</button>
+      <button aria-pressed="false" class="era-button" data-era-filter="aplicada" type="button">Aplicações</button>
+      <button aria-pressed="false" class="era-button" data-era-filter="academica" type="button">Faculdade</button>
+      <button aria-pressed="false" class="era-button" data-era-filter="github" type="button">Descobertas do GitHub</button>
+    </div>
+  </div>
+</div>
+<div class="project-meta">
+  <span id="projectResult" role="status"></span>
+  <div class="project-sync">
+    <div role="status">
+      <span id="projectSource"><span class="meta-dot" aria-hidden="true"></span><span id="projectSourceText">Curadoria local</span></span>
+      <small id="projectSyncText"></small>
+    </div>
+    <button class="project-refresh" id="refreshProjects" type="button">Sincronizar</button>
+  </div>
+</div>
+<div class="project-grid" id="projectGrid"></div>
+<div class="empty-state" hidden="" id="projectEmpty">
+  <h3>Nenhum projeto encontrado</h3><p>Tente outra busca ou limpe os filtros.</p>
+  <button class="button button-ghost" id="resetFilters" type="button">Limpar filtros</button>
+</div>
+<div class="projects-footer">
+  <a class="text-link" href="https://github.com/BrandonSaraiva?tab=repositories" rel="noopener noreferrer" target="_blank">GitHub principal</a>
+  <a class="text-link" href="https://github.com/mistercegueta?tab=repositories" rel="noopener noreferrer" target="_blank">GitHub pessoal</a>
+</div>
 </div>
 </section>
 <section aria-labelledby="labTitle" class="section section-lab container" id="laboratorio">
 <div class="section-heading" data-reveal=""><div class="section-kicker"><span class="section-number">03/</span> AUTOMATION PLAYGROUND</div><div class="heading-split"><h2 id="labTitle">Inventário de <span>repositórios.</span></h2><p>Este laboratório consulta a API pública do GitHub, classifica projetos e gera um arquivo CSV com os metadados disponíveis.</p></div></div>
 <div class="lab-layout" data-reveal="">
-<div class="lab-intro"><div aria-hidden="true" class="lab-icon">⌘</div><div class="lab-serial">DEMO_001 <span>/</span> CLIENT-SIDE ENGINE</div><h3>Inventário<br/><em>automatizado.</em></h3><p>A execução consulta repositórios públicos e organiza categorias, tecnologias, datas e métricas disponíveis. Os resultados podem ser exportados em CSV ou analisados no painel interativo. Se a API estiver indisponível, a demonstração utiliza a curadoria local e identifica a origem dos registros.</p><div class="lab-commands"><span><b>01</b> Consultar GitHub</span><span><b>02</b> Identificar automações</span><span><b>03</b> Organizar metadados</span><span><b>04</b> Gerar inventário CSV</span></div><div class="lab-actions"><button class="button button-primary" id="runDemo" type="button"><span id="runDemoLabel">▶   Executar fluxo</span><span aria-hidden="true" class="button-icon">↗</span></button><button class="button button-ghost" disabled="" id="downloadCsv" type="button">↓ Baixar CSV</button><button class="button button-ghost insight-trigger" id="openCsvExplorer" type="button"><span data-insight-text="open">◈ Analisar CSV</span> <span aria-hidden="true">↗</span></button></div><p class="lab-disclaimer">* Dados obtidos de repositórios públicos. Se a API estiver indisponível, o CSV identifica os itens provenientes da curadoria local.</p></div>
+<div class="lab-intro"><div aria-hidden="true" class="lab-icon">⌘</div><div class="lab-serial">DEMO_001 <span>/</span> CLIENT-SIDE ENGINE</div><h3>Inventário<br/><em>automatizado.</em></h3><p>Exporte o catálogo em CSV ou explore categorias, tecnologias e datas no painel interativo. Se a API estiver indisponível, o inventário usa a última cópia disponível.</p><div class="lab-commands"><span><b>01</b> Consultar GitHub</span><span><b>02</b> Selecionar projetos</span><span><b>03</b> Organizar metadados</span><span><b>04</b> Gerar inventário CSV</span></div><div class="lab-actions"><button class="button button-primary" id="runDemo" type="button"><span id="runDemoLabel">▶   Executar fluxo</span><span aria-hidden="true" class="button-icon">↗</span></button><button class="button button-ghost" disabled="" id="downloadCsv" type="button">↓ Baixar CSV</button><button class="button button-ghost insight-trigger" id="openCsvExplorer" type="button"><span data-insight-text="open">◈ Analisar CSV</span> <span aria-hidden="true">↗</span></button></div></div>
 <div aria-label="Terminal de demonstração de automação" class="terminal" role="region"><div class="terminal-titlebar"><span class="terminal-dots"><i></i><i></i><i></i></span><span>brandon@rpa-engine: ~/portfolio</span><span>⌘</span></div><div class="terminal-body"><div class="terminal-path"><span class="terminal-purple">brandon@rpa-engine</span>:<span class="terminal-cyan">~/portfolio</span>$ node catalog-export.js</div><div aria-hidden="true" class="terminal-ascii">┌───────────────────────────────────────┐
 │    <span>B / S    REPOSITORY INVENTORY</span>       │
 │    GITHUB → CLASSIFY → CSV            │
-└───────────────────────────────────────┘</div><div class="terminal-status">&gt; ESTADO: <strong id="demoState">AGUARDANDO EXECUÇÃO</strong></div><div aria-label="Etapas do processamento" class="terminal-stages" id="demoStages"><div class="terminal-stage" data-stage="0"><span>01</span> FETCH</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="1"><span>02</span> FILTER</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="2"><span>03</span> ENRICH</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="3"><span>04</span> CSV</div></div><div aria-live="polite" aria-relevant="additions" class="terminal-log" id="demoLog" role="log"><div class="log-entry"><span class="log-time">[READY]</span> Clique para consultar os projetos e gerar o inventário.</div></div><div class="terminal-metrics"><div><span>REPOSITÓRIOS</span><strong id="metricInput">--</strong></div><div><span>AUTOMAÇÕES</span><strong id="metricValid">--</strong></div><div><span>CSV / LINHAS</span><strong id="metricOutput">--</strong></div></div></div><div class="terminal-footer"><span id="demoProgressLabel">AWAITING_INPUT</span><span>SECURE LOCAL PROCESS // <span id="demoProgress">00%</span></span></div></div>
+└───────────────────────────────────────┘</div><div class="terminal-status">&gt; ESTADO: <strong id="demoState">AGUARDANDO EXECUÇÃO</strong></div><div aria-label="Etapas do processamento" class="terminal-stages" id="demoStages"><div class="terminal-stage" data-stage="0"><span>01</span> FETCH</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="1"><span>02</span> FILTER</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="2"><span>03</span> ENRICH</div><span class="stage-arrow">→</span><div class="terminal-stage" data-stage="3"><span>04</span> CSV</div></div><div aria-live="polite" aria-relevant="additions" class="terminal-log" id="demoLog" role="log"><div class="log-entry"><span class="log-time">[READY]</span> Clique para consultar os projetos e gerar o inventário.</div></div><div class="terminal-metrics"><div><span>REPOSITÓRIOS</span><strong id="metricInput">--</strong></div><div><span>CATÁLOGO</span><strong id="metricValid">--</strong></div><div><span>CSV / LINHAS</span><strong id="metricOutput">--</strong></div></div></div><div class="terminal-footer"><span id="demoProgressLabel">AWAITING_INPUT</span><span>SECURE LOCAL PROCESS // <span id="demoProgress">00%</span></span></div></div>
 </div>
 </section>
 <section aria-labelledby="timelineTitle" class="section section-timeline" id="trajetoria"><div class="container timeline-layout"><div class="timeline-intro" data-reveal=""><div class="section-kicker"><span class="section-number">04/</span> MINHA JORNADA</div><h2 id="timelineTitle">Minha <span>trajetória.</span></h2><p>Experiência em automação, coleta de dados e desenvolvimento, desde a formação no IESB até a atuação em instituições públicas.</p><a class="text-link" href="https://www.linkedin.com/in/brandon-saraiva-006a4823b/" rel="noopener noreferrer" target="_blank">Trajetória completa no LinkedIn ↗</a></div><div class="timeline-list" data-reveal="">
@@ -205,7 +250,7 @@
           <div id="insightStackMap" class="insight-stack-map" role="group" aria-label="Tecnologias utilizadas por repositório"></div>
           <div id="insightStackSummary" class="insight-stack-summary" aria-live="polite"></div>
         </section>
-        <section class="insight-card" aria-labelledby="insightMatrixTitle"><div class="insight-card-kicker">04 / PROJECT MATRIX</div><h3 id="insightMatrixTitle" data-insight-text="matrixTitle">Categorias e contextos</h3><p data-insight-text="matrixNote">Comparação entre projetos acadêmicos e aplicações profissionais, conforme a organização do portfólio.</p><div id="insightMatrix" class="insight-matrix"></div></section>
+        <section class="insight-card" aria-labelledby="insightMatrixTitle"><div class="insight-card-kicker">04 / PROJECT MATRIX</div><h3 id="insightMatrixTitle" data-insight-text="matrixTitle">Categorias e contextos</h3><p data-insight-text="matrixNote">Cruza o tipo de projeto com o contexto informado no catálogo.</p><div id="insightMatrix" class="insight-matrix"></div></section>
         <section class="insight-card" aria-labelledby="insightRankTitle"><div class="insight-card-kicker">05 / REPOSITORY HIGHLIGHTS</div><h3 id="insightRankTitle" data-insight-text="rankTitle">Comparativo de repositórios</h3><p id="insightRankNote"></p><div id="insightRank" class="insight-rank-list"></div></section>
       </div>
       <p class="insight-bottom-note" data-insight-text="missingMeta">A análise utiliza somente os dados presentes no CSV. Campos ausentes não são estimados e valores iguais a zero são preservados.</p>

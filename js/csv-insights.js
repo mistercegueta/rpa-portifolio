@@ -34,7 +34,7 @@
       stackEmpty: 'Não há tecnologias declaradas na seleção.',
       stackInfo: (shown, all, techShown, techAll) => `Exibindo ${shown} de ${all} repositórios · ${techShown} de ${techAll} tecnologias · clique em uma linha ou ponto para filtrar`,
       matrixTitle: 'Categorias e contextos',
-      matrixNote: 'Comparação entre projetos acadêmicos e aplicações profissionais, conforme a organização do portfólio.',
+      matrixNote: 'Cruza o tipo de projeto com o contexto informado no catálogo.',
       academic: 'Faculdade', applied: 'Aplicações', other: 'Não informado',
       rankTitle: 'Comparativo de repositórios', rankNoteSize: 'Ordenados pelo tamanho aproximado (KB), conforme a API do GitHub.',
       rankNoteStars: 'Ordenados pelo número de estrelas registrado no CSV.',
@@ -80,7 +80,7 @@
       stackEmpty: 'No technologies are available in this selection.',
       stackInfo: (shown, all, techShown, techAll) => `Showing ${shown} of ${all} repositories · ${techShown} of ${techAll} technologies · select a row or dot to filter`,
       matrixTitle: 'Categories and contexts',
-      matrixNote: 'Comparison of university projects and professional applications, as organized in the portfolio.',
+      matrixNote: 'Compares project types by the context recorded in the catalog.',
       academic: 'University', applied: 'Applied', other: 'Not available',
       rankTitle: 'Repository comparison', rankNoteSize: 'Sorted by approximate size in KB, as reported by the GitHub API.',
       rankNoteStars: 'Sorted by the number of stars recorded in the CSV.',
@@ -460,9 +460,10 @@
     host.replaceChildren();
     // Same selected repositories as all other visualizations.
     const rows = filtered();
-    const eras = ['academica', 'aplicada'];
+    const eraLabels = { academica: 'academic', aplicada: 'applied', outros: 'other' };
+    const eras = Object.keys(eraLabels);
     host.append(textNode('span', 'insight-matrix-header', ''));
-    eras.forEach(e => host.append(textNode('span', 'insight-matrix-header', tr(e === 'academica' ? 'academic' : 'applied'))));
+    eras.forEach(era => host.append(textNode('span', 'insight-matrix-header', tr(eraLabels[era]))));
     const max = Math.max(1, ...cats.flatMap(cat => eras.map(era => rows.filter(r => r.category === cat && r.era === era).length)));
     cats.filter(cat => rows.some(r => r.category === cat)).forEach(cat => {
       host.append(textNode('span', 'insight-matrix-rowlabel', categoryName(cat)));
@@ -471,7 +472,7 @@
         const button = textNode('button', 'insight-matrix-cell', String(count));
         button.type = 'button';
         button.style.setProperty('--heat', (count / max * 0.53 + 0.09).toFixed(2));
-        button.title = categoryName(cat) + ' · ' + tr(era === 'academica' ? 'academic' : 'applied') + ': ' + count;
+        button.title = categoryName(cat) + ' · ' + tr(eraLabels[era]) + ': ' + count;
         button.setAttribute('aria-label', button.title + '. ' + tr('chartTip'));
         button.setAttribute('aria-pressed', String(state.category === cat && state.era === era));
         button.disabled = count === 0;

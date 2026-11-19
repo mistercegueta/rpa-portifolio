@@ -1,19 +1,21 @@
-name: Verify CSV insights
+name: Verify portfolio catalog and CSV
 
 on:
   push:
     paths:
       - 'js/csv-insights.js'
+      - 'js/catalog.js'
       - 'js/projects.js'
       - 'index.html'
-      - 'tests/csv-insights.test.cjs'
+      - 'tests/**'
       - '.github/workflows/verify-insights.yml'
   pull_request:
     paths:
       - 'js/csv-insights.js'
+      - 'js/catalog.js'
       - 'js/projects.js'
       - 'index.html'
-      - 'tests/csv-insights.test.cjs'
+      - 'tests/**'
       - '.github/workflows/verify-insights.yml'
   workflow_dispatch:
 
@@ -25,5 +27,5 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
-      - name: Test filtered charts and CSV compatibility
-        run: node --test tests/csv-insights.test.cjs
+      - name: Test repository discovery, filtered charts and CSV compatibility
+        run: node --test

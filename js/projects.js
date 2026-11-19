@@ -1,13 +1,24 @@
 /**
  * CURADORIA: projetos confirmados e contexto informado por Brandon.
- * `era` explícita prevalece sobre a data do repositório (ex.: trabalho ANAC).
- * Repositórios novos usam created_at para estimar a fase.
+ * A fase só é definida quando o contexto do projeto é conhecido.
  * Nunca guardar tokens ou informações confidenciais neste arquivo público.
  */
 window.PORTFOLIO_CONFIG = Object.freeze({
-  githubUsername: 'BrandonSaraiva',
-  excludedRepositories: ['Site-Cartoes', 'rpa-portfolio', 'devportfolio', 'BrandonSaraiva.github.io'],
+  githubAccounts: ['BrandonSaraiva', 'mistercegueta'],
+  snapshotUrl: 'https://raw.githubusercontent.com/mistercegueta/rpa-portifolio/main/catalog/repos.json',
+  excludedRepositories: [
+    'BrandonSaraiva/Site-Cartoes', 'BrandonSaraiva/brandon_portfolio',
+    'BrandonSaraiva/BrandonSaraiva.github.io', 'mistercegueta/rpa-portifolio'
+  ],
   curatedProjects: [
+    {
+      repo: 'Dou-e-Concursos', title: 'Radar DOU + Concursos', category: 'fluxos', era: 'aplicada',
+      eyebrow: 'MONITORAMENTO & ALERTAS', eyebrow_en: 'MONITORING & ALERTS', visual: 'workflow', feature: true,
+      description: 'Monitora publicações no Diário Oficial da União e concursos nacionais ou estaduais. Guarda o histórico no dispositivo e avisa pelo Telegram quando encontra novidades.',
+      description_en: 'Tracks publications in Brazil’s federal gazette and national or state public-sector exams. It stores results on the device and sends Telegram alerts when it finds new entries.',
+      tags: ['Python', 'Telegram Bot', 'Windows', 'Android'], url: 'https://github.com/BrandonSaraiva/Dou-e-Concursos',
+      release: 'https://github.com/BrandonSaraiva/Dou-e-Concursos/releases/latest'
+    },
     {
       repo: 'indexador_elastic', title: 'Elasticsearch Indexer', category: 'dados', era: 'aplicada',
       context: 'ANAC', context_en: 'ANAC',

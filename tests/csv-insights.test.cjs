@@ -126,11 +126,11 @@ const checkSubset = (value, expected) => {
   assert.ok(value.bars.every(x => x.count <= expected));
 };
 
-test('all charts use six repositories initially', () => {
+test('all charts use the seven curated repositories initially', () => {
   const app = createApp();
   app.load(oldLabels);
-  checkSubset(app.selected(), 6);
-  assert.match(app.selected().summary, /6 de 6/);
+  checkSubset(app.selected(), 7);
+  assert.match(app.selected().summary, /7 de 7/);
 });
 
 test('searching web scraping consistently selects only 2 repositories', () => {
@@ -144,7 +144,7 @@ test('searching web scraping consistently selects only 2 repositories', () => {
   assert.deepEqual(result.repos, ['Threads Scraper', 'Tokinho • Telegram Bot']);
   assert.equal(result.bars.find(x => x.name === 'Python').count, 2);
   assert.equal(result.bars.find(x => x.name === 'Web scraping').count, 2);
-  assert.match(result.summary, /2 de 6/);
+  assert.match(result.summary, /2 de 7/);
 });
 
 test('project type is distinct from techniques and filters every chart', () => {
@@ -182,8 +182,8 @@ test('category ring always represents types, project names are nested', () => {
 test('new exported project type names remain recognized', () => {
   const app = createApp();
   app.load(newLabels);
-  checkSubset(app.selected(), 6);
-  assert.equal(app.get('insightMetricApi').textContent, '3');
+  checkSubset(app.selected(), 7);
+  assert.equal(app.get('insightMetricApi').textContent, '4');
 });
 
 test('no matches shows zero everywhere rather than old values', () => {
@@ -193,7 +193,7 @@ test('no matches shows zero everywhere rather than old values', () => {
   input.value = 'nonexistent-product-xyz';
   input.fire('input');
   checkSubset(app.selected(), 0);
-  assert.match(app.selected().summary, /0 de 6/);
+  assert.match(app.selected().summary, /0 de 7/);
 });
 
 test('required element ids exist in the HTML and visualizations do not ignore filters', () => {
