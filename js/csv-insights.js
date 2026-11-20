@@ -322,8 +322,11 @@
     // category has already been chosen: that made 2 selected look like 6.
     const rows = filtered();
     const ring = $('insightDonut');
+    const sliceLayer = $('insightDonutSlices');
     const legend = $('insightCategoriesLegend');
     legend.replaceChildren();
+    sliceLayer.replaceChildren();
+    sliceLayer.dataset.preview = 'false';
     const counts = Object.fromEntries(cats.map(key =>
       [key, rows.filter(row => row.category === key).length]));
     const activeCats = cats.filter(key => counts[key] > 0);
@@ -335,17 +338,37 @@
 
     // A fatia SEMPRE significa tipo de projeto. Nunca mudar o significado
     // para "projeto individual" quando há só um tipo no filtro.
+    const slices = new Map();
     let offset = 0;
     const parts = activeCats.map(key => {
-      const from = offset, to = (offset += counts[key] / total * 100);
-      return colors[key] + ' ' + from.toFixed(3) + '% ' + to.toFixed(3) + '%';
+      const from = offset.toFixed(3) + '%';
+      offset += counts[key] / total * 100;
+      const to = offset.toFixed(3) + '%';
+      const part = `${colors[key]} ${from} ${to}`;
+      if (activeCats.length > 1) {
+        const slice = textNode('span', 'insight-donut-slice');
+        slice.style.background = `conic-gradient(transparent 0% ${from}, ${part}, transparent ${to} 100%)`;
+        slices.set(key, slice);
+        sliceLayer.append(slice);
+      }
+      return part;
     });
     ring.style.background = parts.length
       ? 'conic-gradient(' + parts.join(', ') + ')' : '#242b41';
 
+    let hoveredCategory = '';
+    let focusedButton = null;
+    function updatePreview() {
+      const focusedCategory = focusedButton?.matches(':focus-visible') ? focusedButton.dataset.category : '';
+      const preview = hoveredCategory || focusedCategory;
+      sliceLayer.dataset.preview = String(slices.has(preview));
+      slices.forEach((slice, key) => { slice.dataset.active = String(key === preview); });
+    }
+
     activeCats.forEach(key => {
       const button = textNode('button', 'insight-legend-item');
       button.type = 'button';
+      button.dataset.category = key;
       button.setAttribute('aria-pressed', String(state.category === key));
       button.title = tr('chartTip');
       const left = textNode('span', 'insight-legend-name');
@@ -354,9 +377,28 @@
       left.append(swatch, document.createTextNode(categoryName(key)));
       button.append(left, textNode('strong', '',
         fmt(counts[key]) + ' · ' + Math.round(counts[key] / total * 100) + '%'));
+      button.addEventListener('pointerenter', event => {
+        if (event.pointerType === 'touch') return;
+        hoveredCategory = key;
+        updatePreview();
+      });
+      button.addEventListener('pointerleave', () => {
+        hoveredCategory = '';
+        updatePreview();
+      });
+      button.addEventListener('focus', () => {
+        focusedButton = button;
+        updatePreview();
+      });
+      button.addEventListener('blur', () => {
+        focusedButton = null;
+        updatePreview();
+      });
       button.addEventListener('click', () => {
+        const restoreFocus = document.activeElement === button;
         state.category = state.category === key ? 'all' : key;
         render();
+        if (restoreFocus) legend.querySelector(`[data-category="${key}"]`)?.focus({ preventScroll: true });
       });
       legend.append(button);
 

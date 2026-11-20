@@ -70,15 +70,22 @@
 .insight-donut-layout{display:flex;align-items:center;justify-content:space-around;gap:18px;flex-wrap:wrap}
 .insight-donut{width:clamp(152px,18vw,194px);height:clamp(152px,18vw,194px);
   border-radius:50%;display:grid;place-items:center;flex-shrink:0;position:relative}
+.insight-donut-slices,.insight-donut-slices::before,.insight-donut-slice{
+  position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+.insight-donut-slices::before{content:'';background:rgba(19,23,40,.34);opacity:0;transition:opacity .16s ease-out}
+.insight-donut-slices[data-preview=true]::before{opacity:1}
+.insight-donut-slice{opacity:0;transition:opacity .16s ease-out,transform .16s ease-out}
+.insight-donut-slice[data-active=true]{opacity:1;transform:scale(1.07)}
 .insight-donut-hole{width:72%;height:72%;border-radius:50%;background:#131728;
-  display:flex;flex-direction:column;align-items:center;justify-content:center}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;z-index:1}
 .insight-donut-hole strong{font:700 34px var(--display);line-height:1;color:var(--white)}
 .insight-donut-hole small{font:9px var(--mono);color:#a4a6c6;margin-top:5px}
 .insight-categories-legend{min-width:210px;flex:1;display:grid;gap:4px}
 .insight-legend-item{display:flex;justify-content:space-between;gap:10px;align-items:center;
   border:1px solid transparent;background:transparent;color:var(--white);
   text-align:left;padding:8px 7px;font:11px var(--display)}
-.insight-legend-item[aria-pressed=true],.insight-legend-item:hover{border-color:#555077;background:#22223a}
+.insight-legend-item[aria-pressed=true],.insight-legend-item:hover,.insight-legend-item:focus-visible{
+  border-color:#555077;background:#22223a}
 .insight-legend-name{display:flex;align-items:center;gap:8px}
 .insight-swatch{width:9px;height:9px;display:inline-block;flex-shrink:0}
 .insight-legend-item strong{font:10px var(--mono);white-space:nowrap;color:#c8c3e6}
@@ -152,6 +159,10 @@ a.insight-rank-link:hover{color:var(--cyan)}
   .insight-error{margin:0 17px 12px}
 }
 @media(prefers-reduced-motion:reduce){.insight-timeline-bar,.insight-drop{transition:none}}
+@media(prefers-reduced-motion:reduce){
+  .insight-donut-slices::before,.insight-donut-slice{transition:none}
+  .insight-donut-slice[data-active=true]{transform:none}
+}
 
 .insight-card-wide{grid-column:1/-1}
 

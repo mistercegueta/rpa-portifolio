@@ -17,12 +17,12 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="./css/styles.css?v=3" rel="stylesheet"/>
-<link href="./css/csv-insights.css?v=4" rel="stylesheet"/>
+<link href="./css/csv-insights.css?v=5" rel="stylesheet"/>
 <script defer="" src="./js/projects.js?v=4"></script>
 <script defer="" src="./js/catalog.js?v=3"></script>
 <script defer="" src="./js/i18n.js?v=3"></script>
 <script defer="" src="./js/app.js?v=4"></script>
-<script defer="" src="./js/csv-insights.js?v=4"></script>
+<script defer="" src="./js/csv-insights.js?v=5"></script>
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Ir para conteúdo</a>
@@ -227,7 +227,13 @@
       <p id="insightNoResults" class="insight-no-results" data-insight-text="noFilter" hidden>Nenhum projeto corresponde aos filtros. Limpe os filtros para explorar novamente.</p>
       <div class="insight-grid">
         <section class="insight-card" aria-labelledby="insightCatTitle"><div class="insight-card-kicker">01 / CATEGORY SIGNAL</div><h3 id="insightCatTitle" data-insight-text="donutTitle">Projetos por tipo</h3><p id="insightDonutNote" data-insight-text="donutNote">Agrupamento pela finalidade dos projetos. As ferramentas e técnicas aparecem nos gráficos seguintes.</p>
-          <div class="insight-donut-layout"><div id="insightDonut" class="insight-donut" role="img" aria-label="Distribuição por categoria"><div class="insight-donut-hole"><strong id="insightDonutNumber">0</strong><small id="insightDonutCaption">projetos</small></div></div><div id="insightCategoriesLegend" class="insight-categories-legend"></div></div>
+          <div class="insight-donut-layout">
+            <div id="insightDonut" class="insight-donut" role="img" aria-label="Distribuição por categoria">
+              <div id="insightDonutSlices" class="insight-donut-slices" aria-hidden="true"></div>
+              <div class="insight-donut-hole"><strong id="insightDonutNumber">0</strong><small id="insightDonutCaption">projetos</small></div>
+            </div>
+            <div id="insightCategoriesLegend" class="insight-categories-legend"></div>
+          </div>
         </section>
         <section class="insight-card" aria-labelledby="insightTechTitle"><div class="insight-card-kicker">02 / TECH STACK</div><h3 id="insightTechTitle" data-insight-text="techTitle">Ferramentas e técnicas</h3><p data-insight-text="techNote">Cada barra indica quantos dos repositórios selecionados utilizam a ferramenta ou técnica.</p><div id="insightTechBars" class="insight-tech-bars"></div></section>
         <section class="insight-card insight-card-wide insight-stack-card" aria-labelledby="insightStackTitle">
