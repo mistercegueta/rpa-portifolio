@@ -17,12 +17,12 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="./css/styles.css?v=3" rel="stylesheet"/>
-<link href="./css/csv-insights.css?v=2" rel="stylesheet"/>
+<link href="./css/csv-insights.css?v=3" rel="stylesheet"/>
 <script defer="" src="./js/projects.js?v=3"></script>
 <script defer="" src="./js/catalog.js?v=3"></script>
 <script defer="" src="./js/i18n.js?v=3"></script>
 <script defer="" src="./js/app.js?v=3"></script>
-<script defer="" src="./js/csv-insights.js?v=2"></script>
+<script defer="" src="./js/csv-insights.js?v=3"></script>
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Ir para conteúdo</a>
@@ -237,7 +237,11 @@
           <div id="insightStackMap" class="insight-stack-map" role="group" aria-label="Tecnologias utilizadas por repositório"></div>
           <div id="insightStackSummary" class="insight-stack-summary" aria-live="polite"></div>
         </section>
-        <section class="insight-card" aria-labelledby="insightMatrixTitle"><div class="insight-card-kicker">04 / PROJECT MATRIX</div><h3 id="insightMatrixTitle" data-insight-text="matrixTitle">Categorias e contextos</h3><p data-insight-text="matrixNote">Cruza o tipo de projeto com o contexto informado no catálogo.</p><div id="insightMatrix" class="insight-matrix"></div></section>
+        <section class="insight-card insight-activity" aria-labelledby="insightActivityTitle">
+          <h3 id="insightActivityTitle" data-insight-text="activityTitle">Criação e último push</h3>
+          <p data-insight-text="activityNote">Veja quando cada repositório foi criado e quando recebeu o último envio de código registrado no CSV.</p>
+          <div id="insightActivity"></div>
+        </section>
         <section class="insight-card" aria-labelledby="insightRankTitle"><div class="insight-card-kicker">05 / REPOSITORY HIGHLIGHTS</div><h3 id="insightRankTitle" data-insight-text="rankTitle">Comparativo de repositórios</h3><p id="insightRankNote"></p><div id="insightRank" class="insight-rank-list"></div></section>
       </div>
       <p class="insight-bottom-note" data-insight-text="missingMeta">A análise utiliza somente os dados presentes no CSV. Campos ausentes não são estimados e valores iguais a zero são preservados.</p>

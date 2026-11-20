@@ -68,15 +68,24 @@ function createApp() {
     { filename: 'projects.js' });
   const projects = catalog.PORTFOLIO_CONFIG.curatedProjects;
 
-  function load(labels) {
+  const datesByRepo = {
+    'Dou-e-Concursos': ['2026-11-19T16:45:24Z', '2026-11-20T01:13:19Z'],
+    indexador_elastic: ['2023-10-20T19:15:58Z', '2023-10-30T23:32:05Z'],
+    'Bot-Faz-Tudo': ['2023-01-16T14:05:46Z', '2023-11-09T13:17:21Z'],
+    data_science_bot: ['2023-05-11T16:57:38Z', '2023-11-09T13:25:00Z'],
+    get_random_post_threads: ['2023-11-08T22:46:18Z', '2023-11-08T23:12:49Z'],
+  };
+  function load(labels, dates = datesByRepo, exported = '2026-11-20T02:30:00Z') {
     const headers = [
       'repositorio', 'titulo', 'categoria', 'era',
       'linguagem_principal', 'tecnologias', 'url_github', 'fonte_metadados',
+      'criado_em', 'ultimo_push', 'exportado_em',
     ];
     const csv = [headers, ...projects.map(project => [
       project.repo, project.title, labels[project.category],
       project.era === 'academica' ? '01 / FACULDADE' : '02 / APLICAÇÕES',
       'Python', project.tags.join(' | '), project.url, 'GitHub API',
+      ...(dates[project.repo] || ['', '']), exported,
     ])].map(row => row.map(value =>
       '"' + String(value).replace(/"/g, '""') + '"').join(';')).join('\n');
     events['portfolio:inventory-ready']({ detail: { csv } });
@@ -98,9 +107,7 @@ function createApp() {
         })),
       ranks: get('insightRank').children
         .filter(x => x.className === 'insight-rank-item').length,
-      matrixTotal: get('insightMatrix').children
-        .filter(x => x.tagName === 'BUTTON' && !x.disabled)
-        .reduce((n, x) => n + Number(x.textContent), 0),
+      activity: get('insightActivity').children.find(x => x.className === 'insight-activity-list')?.children || [],
       legend: get('insightCategoriesLegend').children,
       summary: get('insightActiveFilter').textContent,
     };
@@ -121,7 +128,7 @@ const checkSubset = (value, expected) => {
   assert.equal(value.kpi, expected);
   assert.equal(value.donut, expected);
   assert.equal(value.repos.length, expected);
-  assert.equal(value.matrixTotal, expected);
+  assert.equal(value.activity.length, expected);
   assert.equal(value.ranks, Math.min(expected, 5));
   assert.ok(value.bars.every(x => x.count <= expected));
 };
@@ -184,6 +191,37 @@ test('new exported project type names remain recognized', () => {
   app.load(newLabels);
   checkSubset(app.selected(), 5);
   assert.equal(app.get('insightMetricApi').textContent, '4');
+  const filter = app.get('insightCategory');
+  filter.value = 'fluxos';
+  filter.fire('change');
+  assert.deepEqual(app.selected().repos, ['Radar DOU + Concursos']);
+});
+
+test('activity uses the shared filtered set and the CSV export date for its 90-day insight', () => {
+  const app = createApp();
+  app.load(newLabels);
+  const [radar] = app.selected().activity;
+  assert.equal(radar.children[0].textContent, 'Radar DOU + Concursos');
+  const [created, pushed] = radar.children[2].children.map(date => date.children[1]);
+  assert.equal(created.dateTime, '2026-11-19T16:45:24Z');
+  assert.equal(pushed.dateTime, '2026-11-20T01:13:19Z');
+  assert.match(app.get('insightActivity').children[0].textContent, /Nos 90 dias até 19 de nov\. de 2026, houve push em 1 de 5/);
+  app.get('insightSearch').value = 'Selenium';
+  app.get('insightSearch').fire('input');
+  assert.match(app.get('insightActivity').children[0].textContent, /houve push em 0 de 2/);
+});
+
+test('activity uses known dates and gives a useful empty state for legacy CSVs', () => {
+  const app = createApp();
+  app.load(newLabels, { 'Dou-e-Concursos': ['2026-11-19', '2026-02-30'] }, '');
+  const [radar] = app.selected().activity;
+  const [created, pushed] = radar.children[2].children.map(date => date.children[1]);
+  assert.match(created.textContent, /19 de nov\. de 2026/);
+  assert.equal(pushed.textContent, 'Sem data');
+  assert.match(app.get('insightActivity').children[0].textContent, /0 de 5/);
+  app.load(newLabels, {}, '');
+  assert.equal(app.selected().activity.length, 0);
+  assert.match(app.get('insightActivity').children[0].textContent, /O CSV não informa datas/);
 });
 
 test('no matches shows zero everywhere rather than old values', () => {

@@ -33,8 +33,13 @@
       stackNote: 'As colunas são repositórios selecionados e as linhas são tecnologias ou técnicas. Um ponto indica a presença da ferramenta no projeto.',
       stackEmpty: 'Não há tecnologias declaradas na seleção.',
       stackInfo: (shown, all, techShown, techAll) => `Exibindo ${shown} de ${all} repositórios · ${techShown} de ${techAll} tecnologias · clique em uma linha ou ponto para filtrar`,
-      matrixTitle: 'Categorias e contextos',
-      matrixNote: 'Cruza o tipo de projeto com o contexto informado no catálogo.',
+      activityTitle: 'Criação e último push',
+      activityNote: 'Veja quando cada repositório foi criado e quando recebeu o último envio de código registrado no CSV.',
+      activityCreated: 'Criação', activityPush: 'Último push', activityMissing: 'Sem data',
+      activityEmpty: 'O CSV não informa datas de criação ou de push para os projetos selecionados.',
+      activityRecent: (count, total, date) => `Nos 90 dias até ${date}, houve push em ${fmt(count)} de ${fmt(total)} repositórios com data de push registrada.`,
+      activityCoverage: (count, total) => `Último push registrado em ${fmt(count)} de ${fmt(total)} repositórios selecionados.`,
+      activityShown: (shown, total) => `Exibindo ${fmt(shown)} de ${fmt(total)} repositórios com alguma data, ordenados pelo evento mais recente.`,
       academic: 'Faculdade', applied: 'Aplicações', other: 'Não informado',
       rankTitle: 'Comparativo de repositórios', rankNoteSize: 'Ordenados pelo tamanho aproximado (KB), conforme a API do GitHub.',
       rankNoteStars: 'Ordenados pelo número de estrelas registrado no CSV.',
@@ -79,8 +84,13 @@
       stackNote: 'Columns are selected repositories and rows are tools or techniques. A dot marks where each one is used.',
       stackEmpty: 'No technologies are available in this selection.',
       stackInfo: (shown, all, techShown, techAll) => `Showing ${shown} of ${all} repositories · ${techShown} of ${techAll} technologies · select a row or dot to filter`,
-      matrixTitle: 'Categories and contexts',
-      matrixNote: 'Compares project types by the context recorded in the catalog.',
+      activityTitle: 'Creation and last push',
+      activityNote: 'See when each repository was created and when it last received a code push according to the CSV.',
+      activityCreated: 'Created', activityPush: 'Last push', activityMissing: 'No date',
+      activityEmpty: 'The CSV has no creation or push dates for the selected projects.',
+      activityRecent: (count, total, date) => `${fmt(count)} of ${fmt(total)} repositories with a recorded push date received a push in the 90 days through ${date}.`,
+      activityCoverage: (count, total) => `Last push recorded for ${fmt(count)} of ${fmt(total)} selected repositories.`,
+      activityShown: (shown, total) => `Showing ${fmt(shown)} of ${fmt(total)} repositories with dates, sorted by latest event.`,
       academic: 'University', applied: 'Applied', other: 'Not available',
       rankTitle: 'Repository comparison', rankNoteSize: 'Sorted by approximate size in KB, as reported by the GitHub API.',
       rankNoteStars: 'Sorted by the number of stars recorded in the CSV.',
@@ -120,7 +130,7 @@
     if (/bot|assist|rpa/.test(v)) return 'bots';
     if (/web|scrap|crawler|extrac|coleta.*conteudo|content extraction/.test(v)) return 'web';
     if (/dados|data|etl|pipeline|integrac|integration/.test(v)) return 'dados';
-    if (/automat|workflow|fluxo/.test(v)) return 'fluxos';
+    if (/automat|automac|workflow|fluxo/.test(v)) return 'fluxos';
     return 'outros';
   }
   function categoryName(key) {
@@ -148,11 +158,13 @@
     const n = Number(t);
     return Number.isFinite(n) && n >= 0 ? n : null;
   }
-  function yearOf(value) {
-    const m = /^(\d{4})-\d\d-\d\d(?:T|$)/.exec(String(value ?? '').trim());
-    if (!m) return null;
-    const y = Number(m[1]);
-    return y >= 1970 && y <= new Date().getUTCFullYear() + 1 ? y : null;
+  function recordedDate(raw) {
+    if (!/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2}))?$/.test(raw)) return null;
+    const day = raw.slice(0, 10);
+    const midnight = new Date(day);
+    const time = Date.parse(raw);
+    if (!Number.isFinite(time) || !Number.isFinite(midnight.getTime()) || midnight.toISOString().slice(0, 10) !== day) return null;
+    return { raw, time };
   }
   // RFC-style quoted fields, embedded semicolons/newlines, escaped quotes and UTF-8 BOM.
   function detectSeparator(text) {
@@ -204,6 +216,7 @@
     created: ['criado_em', 'created_at'],
     updated: ['atualizado_em', 'updated_at'],
     pushed: ['ultimo_push', 'last_push', 'pushed_at'],
+    exported: ['exportado_em', 'exported_at'],
     stars: ['estrelas', 'stars'], forks: ['forks'],
     issues: ['issues_abertas', 'open_issues'],
     size: ['tamanho_kb', 'size_kb'],
@@ -230,8 +243,9 @@
       const record = {
         repo, title: get('title') || repo, category: roleCategory(get('category')),
         era: eraValue(get('era')), source: sourceValue(get('source')),
-        language: get('language'), technologies: unique, created: yearOf(get('created')),
-        pushed: yearOf(get('pushed')), pushedDate: get('pushed'),
+        language: get('language'), technologies: unique,
+        createdDate: recordedDate(get('created')), pushedDate: recordedDate(get('pushed')),
+        exportedDate: recordedDate(get('exported')),
         updatedDate: get('updated'), stars: fieldNumber(get('stars')),
         forks: fieldNumber(get('forks')), issues: fieldNumber(get('issues')),
         size: fieldNumber(get('size')), context: get('context'), url: get('url')
@@ -455,36 +469,78 @@
     host.append(matrix);
     summary.textContent = tr('stackInfo')(rows.length, all.length, visible.length, techs.length);
   }
-  function renderMatrix() {
-    const host = $('insightMatrix');
-    host.replaceChildren();
-    // Same selected repositories as all other visualizations.
-    const rows = filtered();
-    const eraLabels = { academica: 'academic', aplicada: 'applied', outros: 'other' };
-    const eras = Object.keys(eraLabels);
-    host.append(textNode('span', 'insight-matrix-header', ''));
-    eras.forEach(era => host.append(textNode('span', 'insight-matrix-header', tr(eraLabels[era]))));
-    const max = Math.max(1, ...cats.flatMap(cat => eras.map(era => rows.filter(r => r.category === cat && r.era === era).length)));
-    cats.filter(cat => rows.some(r => r.category === cat)).forEach(cat => {
-      host.append(textNode('span', 'insight-matrix-rowlabel', categoryName(cat)));
-      eras.forEach(era => {
-        const count = rows.filter(r => r.category === cat && r.era === era).length;
-        const button = textNode('button', 'insight-matrix-cell', String(count));
-        button.type = 'button';
-        button.style.setProperty('--heat', (count / max * 0.53 + 0.09).toFixed(2));
-        button.title = categoryName(cat) + ' · ' + tr(eraLabels[era]) + ': ' + count;
-        button.setAttribute('aria-label', button.title + '. ' + tr('chartTip'));
-        button.setAttribute('aria-pressed', String(state.category === cat && state.era === era));
-        button.disabled = count === 0;
-        button.addEventListener('click', () => {
-          if (state.category === cat && state.era === era) { state.category = 'all'; state.era = 'all'; }
-          else { state.category = cat; state.era = era; }
-          render();
-        });
-        host.append(button);
-      });
+  function renderActivity(selected) {
+    const host = $('insightActivity');
+    const rows = selected.filter(row => row.createdDate || row.pushedDate);
+    if (!rows.length) {
+      empty(host, tr('activityEmpty'));
+      return;
+    }
+    const locale = language === 'en' ? 'en-US' : 'pt-BR';
+    const utc = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' });
+    const local = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'America/Sao_Paulo' });
+    const format = date => (date.raw.length === 10 ? utc : local).format(date.time);
+    const latestEvent = row => Math.max(row.createdDate?.time ?? -Infinity, row.pushedDate?.time ?? -Infinity);
+    rows.sort((a, b) => latestEvent(b) - latestEvent(a) || a.title.localeCompare(b.title, locale));
+    const visible = rows.slice(0, 8);
+    const dates = visible.flatMap(row => [row.createdDate, row.pushedDate]).filter(Boolean).sort((a, b) => a.time - b.time);
+    const start = dates[0], end = dates.at(-1);
+    const position = date => end.time === start.time ? 50 : (date.time - start.time) / (end.time - start.time) * 100;
+
+    const pushes = rows.filter(row => row.pushedDate);
+    const reference = pushes[0]?.exportedDate;
+    let insight = tr('activityCoverage')(pushes.length, selected.length);
+    if (reference && pushes.every(row => row.exportedDate?.time === reference.time && row.pushedDate.time <= reference.time)) {
+      const cutoff = reference.time - 90 * 86400000;
+      const recent = pushes.filter(row => row.pushedDate.time >= cutoff).length;
+      insight = tr('activityRecent')(recent, pushes.length, format(reference));
+    }
+    const summary = textNode('p', 'insight-activity-summary', insight);
+    const axis = textNode('div', 'insight-activity-axis');
+    axis.setAttribute('aria-hidden', 'true');
+    axis.append(textNode('span', '', format(start)));
+    if (format(end) !== format(start)) axis.append(textNode('span', '', format(end)));
+
+    const list = textNode('ul', 'insight-activity-list');
+    list.setAttribute('role', 'list');
+    visible.forEach(row => {
+      const item = textNode('li', 'insight-activity-row');
+      const url = safeGithubLink(row.url);
+      const name = textNode(url ? 'a' : 'span', 'insight-activity-name', row.title);
+      if (url) {
+        name.href = url;
+        name.target = '_blank';
+        name.rel = 'noopener noreferrer';
+      }
+      const plot = textNode('div', 'insight-activity-plot');
+      plot.setAttribute('aria-hidden', 'true');
+      if (row.createdDate && row.pushedDate && row.createdDate.time <= row.pushedDate.time) {
+        const line = textNode('span', 'insight-activity-span');
+        line.style.left = position(row.createdDate) + '%';
+        line.style.width = (position(row.pushedDate) - position(row.createdDate)) + '%';
+        plot.append(line);
+      }
+      const labels = textNode('div', 'insight-activity-dates');
+      for (const [date, style, label] of [
+        [row.createdDate, 'created', tr('activityCreated')],
+        [row.pushedDate, 'pushed', tr('activityPush')]
+      ]) {
+        if (date) {
+          const point = textNode('span', 'insight-activity-marker ' + style);
+          point.style.left = position(date) + '%';
+          plot.append(point);
+        }
+        const dateLabel = textNode('div', 'insight-activity-date ' + style);
+        const value = textNode(date ? 'time' : 'span', '', date ? format(date) : tr('activityMissing'));
+        if (date) value.dateTime = date.raw;
+        dateLabel.append(textNode('small', '', label), value);
+        labels.append(dateLabel);
+      }
+      item.append(name, plot, labels);
+      list.append(item);
     });
-    if (!rows.length) empty(host);
+    host.replaceChildren(summary, axis, list);
+    if (rows.length > visible.length) host.append(textNode('p', 'insight-activity-more', tr('activityShown')(visible.length, rows.length)));
   }
   function safeGithubLink(value) {
     try {
@@ -505,7 +561,7 @@
     const ranked = [...rows].sort((a, b) =>
       mode === 'stars' ? (b.stars ?? -1) - (a.stars ?? -1)
         : mode === 'size' ? (b.size ?? -1) - (a.size ?? -1)
-          : (b.pushedDate || '').localeCompare(a.pushedDate || '')
+          : (b.pushedDate?.time ?? -Infinity) - (a.pushedDate?.time ?? -Infinity)
     ).slice(0, 5);
     const biggest = Math.max(1, ...ranked.map(r => mode === 'stars' ? r.stars ?? 0 : mode === 'size' ? r.size ?? 0 : 1));
     ranked.forEach((r, i) => {
@@ -524,7 +580,7 @@
       const value = mode === 'stars'
         ? (r.stars === null ? '—' : fmt(r.stars) + ' ★')
         : mode === 'size' ? (r.size === null ? '—' : fmt(r.size) + ' KB')
-          : r.pushedDate ? r.pushedDate.slice(0, 10) : '—';
+          : r.pushedDate?.raw.slice(0, 10) || '—';
       article.append(number, main, textNode('strong', 'insight-rank-value', value));
       host.append(article);
     });
@@ -541,7 +597,7 @@
     renderDonut();
     renderTechnologies();
     renderStackMap();
-    renderMatrix();
+    renderActivity(selected);
     renderRank();
   }
   function translate() {
