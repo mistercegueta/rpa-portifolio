@@ -7,7 +7,7 @@
   const $all = (query, parent = dialog) => Array.from(parent.querySelectorAll(query));
   const state = {
     rows: [], file: '', latestCsv: '', category: 'all', era: 'all',
-    source: 'all', tech: '', search: ''
+    source: 'all', tech: '', search: '', year: null
   };
   let lastFocus = null;
   let language = document.documentElement.lang.toLowerCase().startsWith('en') ? 'en' : 'pt';
@@ -33,13 +33,13 @@
       stackNote: 'As colunas são repositórios selecionados e as linhas são tecnologias ou técnicas. Um ponto indica a presença da ferramenta no projeto.',
       stackEmpty: 'Não há tecnologias declaradas na seleção.',
       stackInfo: (shown, all, techShown, techAll) => `Exibindo ${shown} de ${all} repositórios · ${techShown} de ${techAll} tecnologias · clique em uma linha ou ponto para filtrar`,
-      activityTitle: 'Criação e último push',
-      activityNote: 'Veja quando cada repositório foi criado e quando recebeu o último envio de código registrado no CSV.',
-      activityCreated: 'Criação', activityPush: 'Último push', activityMissing: 'Sem data',
-      activityEmpty: 'O CSV não informa datas de criação ou de push para os projetos selecionados.',
-      activityRecent: (count, total, date) => `Nos 90 dias até ${date}, houve push em ${fmt(count)} de ${fmt(total)} repositórios com data de push registrada.`,
-      activityCoverage: (count, total) => `Último push registrado em ${fmt(count)} de ${fmt(total)} repositórios selecionados.`,
-      activityShown: (shown, total) => `Exibindo ${fmt(shown)} de ${fmt(total)} repositórios com alguma data, ordenados pelo evento mais recente.`,
+      yearTitle: 'Repositórios criados por ano',
+      yearNote: 'Selecione um ponto para ver quais projetos foram criados naquele ano.',
+      yearEmpty: 'A seleção não tem datas de criação válidas no CSV.',
+      yearCount: count => `${fmt(count)} ${count === 1 ? 'repositório' : 'repositórios'}`,
+      yearPeak: (count, total, year) => `Em ${year}, foram criados ${fmt(count)} dos ${fmt(total)} repositórios com data.`,
+      yearMissing: count => `${fmt(count)} sem data de criação válida.`,
+      yearNone: 'Nenhum repositório criado nesse ano na seleção.',
       academic: 'Faculdade', applied: 'Aplicações', other: 'Não informado',
       rankTitle: 'Comparativo de repositórios', rankNoteSize: 'Ordenados pelo tamanho aproximado (KB), conforme a API do GitHub.',
       rankNoteStars: 'Ordenados pelo número de estrelas registrado no CSV.',
@@ -84,13 +84,13 @@
       stackNote: 'Columns are selected repositories and rows are tools or techniques. A dot marks where each one is used.',
       stackEmpty: 'No technologies are available in this selection.',
       stackInfo: (shown, all, techShown, techAll) => `Showing ${shown} of ${all} repositories · ${techShown} of ${techAll} technologies · select a row or dot to filter`,
-      activityTitle: 'Creation and last push',
-      activityNote: 'See when each repository was created and when it last received a code push according to the CSV.',
-      activityCreated: 'Created', activityPush: 'Last push', activityMissing: 'No date',
-      activityEmpty: 'The CSV has no creation or push dates for the selected projects.',
-      activityRecent: (count, total, date) => `${fmt(count)} of ${fmt(total)} repositories with a recorded push date received a push in the 90 days through ${date}.`,
-      activityCoverage: (count, total) => `Last push recorded for ${fmt(count)} of ${fmt(total)} selected repositories.`,
-      activityShown: (shown, total) => `Showing ${fmt(shown)} of ${fmt(total)} repositories with dates, sorted by latest event.`,
+      yearTitle: 'Repositories created by year',
+      yearNote: 'Select a point to see which projects were created that year.',
+      yearEmpty: 'The CSV has no valid creation dates for the selected projects.',
+      yearCount: count => `${fmt(count)} ${count === 1 ? 'repository' : 'repositories'}`,
+      yearPeak: (count, total, year) => `${fmt(count)} of the ${fmt(total)} repositories with dates were created in ${year}.`,
+      yearMissing: count => `${fmt(count)} without a valid creation date.`,
+      yearNone: 'No selected repositories were created that year.',
       academic: 'University', applied: 'Applied', other: 'Not available',
       rankTitle: 'Repository comparison', rankNoteSize: 'Sorted by approximate size in KB, as reported by the GitHub API.',
       rankNoteStars: 'Sorted by the number of stars recorded in the CSV.',
@@ -166,6 +166,13 @@
     if (!Number.isFinite(time) || !Number.isFinite(midnight.getTime()) || midnight.toISOString().slice(0, 10) !== day) return null;
     return { raw, time };
   }
+  const calendarYear = new Intl.DateTimeFormat('en-US', { year: 'numeric', timeZone: 'America/Sao_Paulo' });
+  function creationYear(raw) {
+    const date = recordedDate(raw);
+    if (!date) return null;
+    const year = Number(raw.length === 10 ? raw.slice(0, 4) : calendarYear.format(date.time));
+    return year >= 1970 && year <= new Date().getUTCFullYear() + 1 ? year : null;
+  }
   // RFC-style quoted fields, embedded semicolons/newlines, escaped quotes and UTF-8 BOM.
   function detectSeparator(text) {
     let quoted = false, counts = { ';': 0, ',': 0, '\t': 0 };
@@ -216,7 +223,6 @@
     created: ['criado_em', 'created_at'],
     updated: ['atualizado_em', 'updated_at'],
     pushed: ['ultimo_push', 'last_push', 'pushed_at'],
-    exported: ['exportado_em', 'exported_at'],
     stars: ['estrelas', 'stars'], forks: ['forks'],
     issues: ['issues_abertas', 'open_issues'],
     size: ['tamanho_kb', 'size_kb'],
@@ -244,8 +250,7 @@
         repo, title: get('title') || repo, category: roleCategory(get('category')),
         era: eraValue(get('era')), source: sourceValue(get('source')),
         language: get('language'), technologies: unique,
-        createdDate: recordedDate(get('created')), pushedDate: recordedDate(get('pushed')),
-        exportedDate: recordedDate(get('exported')),
+        createdYear: creationYear(get('created')), pushedDate: recordedDate(get('pushed')),
         updatedDate: get('updated'), stars: fieldNumber(get('stars')),
         forks: fieldNumber(get('forks')), issues: fieldNumber(get('issues')),
         size: fieldNumber(get('size')), context: get('context'), url: get('url')
@@ -469,78 +474,119 @@
     host.append(matrix);
     summary.textContent = tr('stackInfo')(rows.length, all.length, visible.length, techs.length);
   }
-  function renderActivity(selected) {
-    const host = $('insightActivity');
-    const rows = selected.filter(row => row.createdDate || row.pushedDate);
-    if (!rows.length) {
-      empty(host, tr('activityEmpty'));
+  function yearGraphic(tag, attributes) {
+    const node = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+    return node;
+  }
+
+  function renderYears(selected) {
+    const host = $('insightYears');
+    const byYear = new Map();
+    for (const row of selected) {
+      if (row.createdYear === null) continue;
+      if (!byYear.has(row.createdYear)) byYear.set(row.createdYear, []);
+      byYear.get(row.createdYear).push(row);
+    }
+    if (!byYear.size) {
+      empty(host, tr('yearEmpty'));
       return;
     }
-    const locale = language === 'en' ? 'en-US' : 'pt-BR';
-    const utc = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'UTC' });
-    const local = new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeZone: 'America/Sao_Paulo' });
-    const format = date => (date.raw.length === 10 ? utc : local).format(date.time);
-    const latestEvent = row => Math.max(row.createdDate?.time ?? -Infinity, row.pushedDate?.time ?? -Infinity);
-    rows.sort((a, b) => latestEvent(b) - latestEvent(a) || a.title.localeCompare(b.title, locale));
-    const visible = rows.slice(0, 8);
-    const dates = visible.flatMap(row => [row.createdDate, row.pushedDate]).filter(Boolean).sort((a, b) => a.time - b.time);
-    const start = dates[0], end = dates.at(-1);
-    const position = date => end.time === start.time ? 50 : (date.time - start.time) / (end.time - start.time) * 100;
 
-    const pushes = rows.filter(row => row.pushedDate);
-    const reference = pushes[0]?.exportedDate;
-    let insight = tr('activityCoverage')(pushes.length, selected.length);
-    if (reference && pushes.every(row => row.exportedDate?.time === reference.time && row.pushedDate.time <= reference.time)) {
-      const cutoff = reference.time - 90 * 86400000;
-      const recent = pushes.filter(row => row.pushedDate.time >= cutoff).length;
-      insight = tr('activityRecent')(recent, pushes.length, format(reference));
+    const first = Math.min(...byYear.keys());
+    const last = Math.max(...byYear.keys());
+    const years = Array.from({ length: last - first + 1 }, (_, index) => first + index);
+    const counts = years.map(year => byYear.get(year)?.length || 0);
+    const total = counts.reduce((sum, count) => sum + count, 0);
+    const peak = Math.max(...counts);
+    const step = Math.max(1, Math.ceil(peak / 4));
+    const ceiling = Math.ceil(peak / step) * step;
+    const x = index => years.length === 1 ? 50 : (index / (years.length - 1)) * 100;
+    const y = count => (1 - count / ceiling) * 100;
+
+    const summary = textNode('p', 'insight-year-summary', tr('yearPeak')(peak, total, years[counts.lastIndexOf(peak)]));
+    if (total < selected.length) summary.append(document.createTextNode(' ' + tr('yearMissing')(selected.length - total)));
+
+    const scroll = textNode('div', 'insight-year-scroll');
+    if (years.length > 5) {
+      scroll.tabIndex = 0;
+      scroll.setAttribute('role', 'region');
+      scroll.setAttribute('aria-label', tr('yearTitle'));
     }
-    const summary = textNode('p', 'insight-activity-summary', insight);
-    const axis = textNode('div', 'insight-activity-axis');
+    const chart = textNode('div', 'insight-year-chart');
+    chart.style.minWidth = 52 + (years.length - 1) * 48 + 'px';
+    const scale = textNode('div', 'insight-year-scale');
+    const axis = textNode('div', 'insight-year-axis');
+    scale.setAttribute('aria-hidden', 'true');
     axis.setAttribute('aria-hidden', 'true');
-    axis.append(textNode('span', '', format(start)));
-    if (format(end) !== format(start)) axis.append(textNode('span', '', format(end)));
+    const plot = textNode('div', 'insight-year-plot');
+    const svg = yearGraphic('svg', { viewBox: '0 0 100 100', preserveAspectRatio: 'none', 'aria-hidden': 'true' });
 
-    const list = textNode('ul', 'insight-activity-list');
-    list.setAttribute('role', 'list');
-    visible.forEach(row => {
-      const item = textNode('li', 'insight-activity-row');
-      const url = safeGithubLink(row.url);
-      const name = textNode(url ? 'a' : 'span', 'insight-activity-name', row.title);
-      if (url) {
-        name.href = url;
-        name.target = '_blank';
-        name.rel = 'noopener noreferrer';
+    for (let value = 0; value <= ceiling; value += step) {
+      const label = textNode('span', '', fmt(value));
+      label.style.top = y(value) + '%';
+      scale.append(label);
+      svg.append(yearGraphic('line', { x1: 0, x2: 100, y1: y(value), y2: y(value), class: 'insight-year-gridline' }));
+    }
+    if (years.length > 1) {
+      const coordinates = counts.map((count, index) => x(index) + ',' + y(count)).join(' ');
+      svg.append(
+        yearGraphic('polygon', { points: '0,100 ' + coordinates + ' 100,100', class: 'insight-year-fill' }),
+        yearGraphic('polyline', { points: coordinates, class: 'insight-year-line' })
+      );
+    }
+    plot.append(svg);
+
+    const details = textNode('div', 'insight-year-details');
+    details.setAttribute('aria-live', 'polite');
+    const points = new Map();
+    function selectYear(year) {
+      state.year = year;
+      points.forEach((point, key) => point.setAttribute('aria-pressed', String(key === year)));
+      const rows = byYear.get(year) || [];
+      const label = textNode('h4', '', year + ' · ' + tr('yearCount')(rows.length));
+      details.replaceChildren(label);
+      if (!rows.length) {
+        details.append(textNode('p', '', tr('yearNone')));
+        return;
       }
-      const plot = textNode('div', 'insight-activity-plot');
-      plot.setAttribute('aria-hidden', 'true');
-      if (row.createdDate && row.pushedDate && row.createdDate.time <= row.pushedDate.time) {
-        const line = textNode('span', 'insight-activity-span');
-        line.style.left = position(row.createdDate) + '%';
-        line.style.width = (position(row.pushedDate) - position(row.createdDate)) + '%';
-        plot.append(line);
-      }
-      const labels = textNode('div', 'insight-activity-dates');
-      for (const [date, style, label] of [
-        [row.createdDate, 'created', tr('activityCreated')],
-        [row.pushedDate, 'pushed', tr('activityPush')]
-      ]) {
-        if (date) {
-          const point = textNode('span', 'insight-activity-marker ' + style);
-          point.style.left = position(date) + '%';
-          plot.append(point);
+
+      const list = textNode('ul', 'insight-year-projects');
+      for (const row of rows) {
+        const item = textNode('li');
+        const url = safeGithubLink(row.url);
+        const name = textNode(url ? 'a' : 'span', '', row.title);
+        if (url) {
+          name.href = url;
+          name.target = '_blank';
+          name.rel = 'noopener noreferrer';
         }
-        const dateLabel = textNode('div', 'insight-activity-date ' + style);
-        const value = textNode(date ? 'time' : 'span', '', date ? format(date) : tr('activityMissing'));
-        if (date) value.dateTime = date.raw;
-        dateLabel.append(textNode('small', '', label), value);
-        labels.append(dateLabel);
+        item.append(name);
+        list.append(item);
       }
-      item.append(name, plot, labels);
-      list.append(item);
+      details.append(list);
+    }
+
+    years.forEach((year, index) => {
+      const point = textNode('button', 'insight-year-point');
+      point.type = 'button';
+      point.setAttribute('aria-label', year + ' · ' + tr('yearCount')(counts[index]));
+      point.style.left = x(index) + '%';
+      point.style.top = y(counts[index]) + '%';
+      point.append(textNode('span', 'insight-year-value', fmt(counts[index])));
+      point.addEventListener('click', () => selectYear(year));
+      points.set(year, point);
+      plot.append(point);
+
+      const tick = textNode('span', '', year);
+      tick.style.left = x(index) + '%';
+      axis.append(tick);
     });
-    host.replaceChildren(summary, axis, list);
-    if (rows.length > visible.length) host.append(textNode('p', 'insight-activity-more', tr('activityShown')(visible.length, rows.length)));
+
+    chart.append(scale, plot, axis);
+    scroll.append(chart);
+    selectYear(points.has(state.year) ? state.year : last);
+    host.replaceChildren(summary, scroll, details);
   }
   function safeGithubLink(value) {
     try {
@@ -597,7 +643,7 @@
     renderDonut();
     renderTechnologies();
     renderStackMap();
-    renderActivity(selected);
+    renderYears(selected);
     renderRank();
   }
   function translate() {
@@ -613,7 +659,7 @@
     if (state.rows.length) render();
   }
   function resetFilters() {
-    Object.assign(state, { category: 'all', era: 'all', source: 'all', tech: '', search: '' });
+    Object.assign(state, { category: 'all', era: 'all', source: 'all', tech: '', search: '', year: null });
     render();
   }
   function loadCsv(csv, file) {

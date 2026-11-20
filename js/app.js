@@ -234,7 +234,7 @@
     }
     if (p.tags?.length) {
       const tags = element('div', 'project-tags');
-      p.tags.slice(0, 5).forEach(tag => tags.append(element('span', null, tag)));
+      p.tags.slice(0, 7).forEach(tag => tags.append(element('span', null, tag)));
       content.append(tags);
     }
     if (created) {

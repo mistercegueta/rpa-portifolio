@@ -17,12 +17,12 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
 <link href="./css/styles.css?v=3" rel="stylesheet"/>
-<link href="./css/csv-insights.css?v=3" rel="stylesheet"/>
-<script defer="" src="./js/projects.js?v=3"></script>
+<link href="./css/csv-insights.css?v=4" rel="stylesheet"/>
+<script defer="" src="./js/projects.js?v=4"></script>
 <script defer="" src="./js/catalog.js?v=3"></script>
 <script defer="" src="./js/i18n.js?v=3"></script>
-<script defer="" src="./js/app.js?v=3"></script>
-<script defer="" src="./js/csv-insights.js?v=3"></script>
+<script defer="" src="./js/app.js?v=4"></script>
+<script defer="" src="./js/csv-insights.js?v=4"></script>
 </head>
 <body>
 <a class="skip-link" href="#conteudo">Ir para conteúdo</a>
@@ -237,10 +237,10 @@
           <div id="insightStackMap" class="insight-stack-map" role="group" aria-label="Tecnologias utilizadas por repositório"></div>
           <div id="insightStackSummary" class="insight-stack-summary" aria-live="polite"></div>
         </section>
-        <section class="insight-card insight-activity" aria-labelledby="insightActivityTitle">
-          <h3 id="insightActivityTitle" data-insight-text="activityTitle">Criação e último push</h3>
-          <p data-insight-text="activityNote">Veja quando cada repositório foi criado e quando recebeu o último envio de código registrado no CSV.</p>
-          <div id="insightActivity"></div>
+        <section class="insight-card insight-year-card" aria-labelledby="insightYearTitle">
+          <h3 id="insightYearTitle" data-insight-text="yearTitle">Repositórios criados por ano</h3>
+          <p data-insight-text="yearNote">Selecione um ponto para ver quais projetos foram criados naquele ano.</p>
+          <div id="insightYears"></div>
         </section>
         <section class="insight-card" aria-labelledby="insightRankTitle"><div class="insight-card-kicker">05 / REPOSITORY HIGHLIGHTS</div><h3 id="insightRankTitle" data-insight-text="rankTitle">Comparativo de repositórios</h3><p id="insightRankNote"></p><div id="insightRank" class="insight-rank-list"></div></section>
       </div>

@@ -54,6 +54,7 @@ function createApp() {
   const dom = {
     getElementById: get,
     createElement: tag => new FakeEl(tag),
+    createElementNS: (_namespace, tag) => new FakeEl(tag),
     createTextNode: text => ({ textContent: text }),
     querySelectorAll: () => [],
     activeElement: new FakeEl('button'),
@@ -75,17 +76,17 @@ function createApp() {
     data_science_bot: ['2023-05-11T16:57:38Z', '2023-11-09T13:25:00Z'],
     get_random_post_threads: ['2023-11-08T22:46:18Z', '2023-11-08T23:12:49Z'],
   };
-  function load(labels, dates = datesByRepo, exported = '2026-11-20T02:30:00Z') {
+  function load(labels, dates = datesByRepo) {
     const headers = [
       'repositorio', 'titulo', 'categoria', 'era',
       'linguagem_principal', 'tecnologias', 'url_github', 'fonte_metadados',
-      'criado_em', 'ultimo_push', 'exportado_em',
+      'criado_em', 'ultimo_push',
     ];
     const csv = [headers, ...projects.map(project => [
       project.repo, project.title, labels[project.category],
       project.era === 'academica' ? '01 / FACULDADE' : '02 / APLICAÇÕES',
       'Python', project.tags.join(' | '), project.url, 'GitHub API',
-      ...(dates[project.repo] || ['', '']), exported,
+      ...(dates[project.repo] || ['', '']),
     ])].map(row => row.map(value =>
       '"' + String(value).replace(/"/g, '""') + '"').join(';')).join('\n');
     events['portfolio:inventory-ready']({ detail: { csv } });
@@ -94,6 +95,8 @@ function createApp() {
 
   function selected() {
     const map = get('insightStackMap').children[0];
+    const chart = get('insightYears').children.find(x => x.className === 'insight-year-scroll')?.children[0];
+    const plot = chart?.children.find(x => x.className === 'insight-year-plot');
     return {
       kpi: Number(get('insightMetricTotal').textContent),
       donut: Number(get('insightDonutNumber').textContent),
@@ -107,7 +110,7 @@ function createApp() {
         })),
       ranks: get('insightRank').children
         .filter(x => x.className === 'insight-rank-item').length,
-      activity: get('insightActivity').children.find(x => x.className === 'insight-activity-list')?.children || [],
+      yearPoints: plot?.children.filter(x => x.className === 'insight-year-point') || [],
       legend: get('insightCategoriesLegend').children,
       summary: get('insightActiveFilter').textContent,
     };
@@ -128,7 +131,7 @@ const checkSubset = (value, expected) => {
   assert.equal(value.kpi, expected);
   assert.equal(value.donut, expected);
   assert.equal(value.repos.length, expected);
-  assert.equal(value.activity.length, expected);
+  assert.equal(value.yearPoints.reduce((sum, point) => sum + Number(point.children[0].textContent), 0), expected);
   assert.equal(value.ranks, Math.min(expected, 5));
   assert.ok(value.bars.every(x => x.count <= expected));
 };
@@ -197,31 +200,54 @@ test('new exported project type names remain recognized', () => {
   assert.deepEqual(app.selected().repos, ['Radar DOU + Concursos']);
 });
 
-test('activity uses the shared filtered set and the CSV export date for its 90-day insight', () => {
+test('annual line includes years without creation and shows the projects for the selected point', () => {
   const app = createApp();
   app.load(newLabels);
-  const [radar] = app.selected().activity;
-  assert.equal(radar.children[0].textContent, 'Radar DOU + Concursos');
-  const [created, pushed] = radar.children[2].children.map(date => date.children[1]);
-  assert.equal(created.dateTime, '2026-11-19T16:45:24Z');
-  assert.equal(pushed.dateTime, '2026-11-20T01:13:19Z');
-  assert.match(app.get('insightActivity').children[0].textContent, /Nos 90 dias até 19 de nov\. de 2026, houve push em 1 de 5/);
-  app.get('insightSearch').value = 'Selenium';
-  app.get('insightSearch').fire('input');
-  assert.match(app.get('insightActivity').children[0].textContent, /houve push em 0 de 2/);
+  const points = app.selected().yearPoints;
+  assert.deepEqual(points.map(point => point.attributes['aria-label']), [
+    '2023 · 4 repositórios', '2024 · 0 repositórios', '2025 · 0 repositórios', '2026 · 1 repositório'
+  ]);
+  const chart = app.get('insightYears').children[1].children[0];
+  const line = chart.children[1].children[0].children.find(node => node.tagName === 'POLYLINE');
+  assert.equal(line.attributes.points.split(' ').length, 4);
+  const details = app.get('insightYears').children[2];
+  assert.equal(details.children[1].children[0].children[0].textContent, 'Radar DOU + Concursos');
+  points[0].fire('click');
+  assert.equal(points[0].attributes['aria-pressed'], 'true');
+  assert.equal(details.children[1].children.length, 4);
+  points[1].fire('click');
+  assert.match(details.children[1].textContent, /Nenhum repositório/);
 });
 
-test('activity uses known dates and gives a useful empty state for legacy CSVs', () => {
+test('annual line never substitutes push dates for missing or malformed creation dates', () => {
   const app = createApp();
-  app.load(newLabels, { 'Dou-e-Concursos': ['2026-11-19', '2026-02-30'] }, '');
-  const [radar] = app.selected().activity;
-  const [created, pushed] = radar.children[2].children.map(date => date.children[1]);
-  assert.match(created.textContent, /19 de nov\. de 2026/);
-  assert.equal(pushed.textContent, 'Sem data');
-  assert.match(app.get('insightActivity').children[0].textContent, /0 de 5/);
-  app.load(newLabels, {}, '');
-  assert.equal(app.selected().activity.length, 0);
-  assert.match(app.get('insightActivity').children[0].textContent, /O CSV não informa datas/);
+  app.load(newLabels, {
+    'Dou-e-Concursos': ['2026-01-01T01:00:00Z', '2026-11-19'],
+    indexador_elastic: ['2026-01-01', ''],
+    data_science_bot: ['2026-02-30', '2027-01-01'],
+  });
+  assert.deepEqual(app.selected().yearPoints.map(point => point.attributes['aria-label']), [
+    '2025 · 1 repositório', '2026 · 1 repositório'
+  ]);
+  const summary = app.get('insightYears').children[0];
+  assert.match(summary.children[0].textContent, /3 sem data de criação/);
+  app.load(newLabels, { 'Dou-e-Concursos': ['', '2026-11-19'] });
+  assert.equal(app.selected().yearPoints.length, 0);
+  assert.match(app.get('insightYears').children[0].textContent, /não tem datas de criação válidas/);
+});
+
+test('Radar is included in technology filters for Telegram Bot and web scraping', () => {
+  const app = createApp();
+  app.load(newLabels);
+  const input = app.get('insightSearch');
+  for (const [term, expected] of [
+    ['Telegram Bot', ['Bot Faz Tudo', 'Radar DOU + Concursos']],
+    ['Web scraping', ['Radar DOU + Concursos', 'Threads Scraper']]
+  ]) {
+    input.value = term;
+    input.fire('input');
+    assert.deepEqual(app.selected().repos, expected);
+  }
 });
 
 test('no matches shows zero everywhere rather than old values', () => {

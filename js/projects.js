@@ -16,11 +16,11 @@ window.PORTFOLIO_CONFIG = Object.freeze({
     {
       repo: 'Dou-e-Concursos', title: 'Radar DOU + Concursos', category: 'fluxos', era: 'aplicada',
       eyebrow: 'MONITORAMENTO & ALERTAS', eyebrow_en: 'MONITORING & ALERTS',
-      description: 'Acompanha publicações no Diário Oficial da União e concursos nacionais ou estaduais. O Radar compara cada consulta com o histórico local e avisa pelo Telegram quando encontra novidades.',
-      description_en: 'Tracks Brazil’s federal gazette and national or state public-sector exams. Radar compares each check against its local history and sends Telegram alerts for new entries.',
-      workflow: ['Consulta as fontes', 'Compara URLs no SQLite', 'Envia novidades no Telegram'],
-      workflow_en: ['Checks public sources', 'Compares URLs in SQLite', 'Sends new entries via Telegram'],
-      tags: ['Python', 'SQLite', 'Telegram', 'Windows', 'Android'], url: 'https://github.com/BrandonSaraiva/Dou-e-Concursos',
+      description: 'Usa web scraping para acompanhar o Diário Oficial da União e concursos nacionais ou estaduais. O Radar compara os resultados com o histórico local e avisa sobre novidades por um bot do Telegram.',
+      description_en: 'Uses web scraping to track Brazil’s federal gazette and national or state public-sector exams. Radar compares results against its local history and reports new entries through a Telegram bot.',
+      workflow: ['Extrai dados com Beautiful Soup', 'Compara URLs no SQLite', 'Envia alertas pelo bot'],
+      workflow_en: ['Extracts data with Beautiful Soup', 'Compares URLs in SQLite', 'Sends alerts through the bot'],
+      tags: ['Python', 'Telegram Bot', 'Web scraping', 'Beautiful Soup', 'SQLite', 'Windows', 'Android'], url: 'https://github.com/BrandonSaraiva/Dou-e-Concursos',
       release: 'https://github.com/BrandonSaraiva/Dou-e-Concursos/releases/latest',
       demo: 'https://github.com/BrandonSaraiva/Dou-e-Concursos/blob/main/docs/DEMONSTRACAO.md',
       preview: './assets/radar-telegram.png'
