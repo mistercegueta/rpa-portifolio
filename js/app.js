@@ -23,7 +23,6 @@
   let checkingGitHub = false;
   let activeRequest = null;
   let activeFilter = 'todos';
-  let activeEra = 'ambas';
   let activeSort = 'recent';
   let searchTerm = '';
   let generatedCsv = null;
@@ -57,7 +56,6 @@
     'Representação animada de um fluxo automatizado com etapas de entrada, processamento e entrega': 'Animated representation of an automated workflow with input, processing and output stages',
     'Tecnologias e especialidades': 'Technologies and areas of expertise',
     'Filtrar projetos por especialidade': 'Filter projects by area',
-    'Filtrar projetos por contexto': 'Filter projects by context',
     'Buscar projetos': 'Search projects',
     'Buscar projeto ou tecnologia...': 'Search projects or technologies...',
     'Terminal de demonstração de automação': 'Automation catalog terminal',
@@ -75,7 +73,10 @@
       syncSnapshot: date => `API indisponível · versão de ${date}`,
       syncFailed: 'API indisponível · projetos selecionados',
       refresh: 'Sincronizar', refreshing: 'Sincronizando…',
-      createdLabel: 'Criado em', recent: 'Novo', release: 'Downloads',
+      createdLabel: 'Criado em', recent: 'Novo', release: 'Baixar o Radar', demo: 'Ver demonstração',
+      workflow: 'Como funciona',
+      previewAlt: 'Menu do Radar no Telegram com opções para consultar publicações do DOU, concursos e status.',
+      previewCaption: 'Captura real do Radar no Telegram',
       run: '▶  Gerar inventário',
       running: '⟳  Consultando GitHub...',
       again: '↻  Atualizar inventário',
@@ -110,7 +111,10 @@
       syncSnapshot: date => `API unavailable · version from ${date}`,
       syncFailed: 'API unavailable · selected projects',
       refresh: 'Sync now', refreshing: 'Syncing…',
-      createdLabel: 'Created', recent: 'New', release: 'Downloads',
+      createdLabel: 'Created', recent: 'New', release: 'Download Radar', demo: 'View demo',
+      workflow: 'How it works',
+      previewAlt: 'Radar’s Telegram menu with options for gazette publications, exams and monitor status.',
+      previewCaption: 'Radar running in Telegram',
       run: '▶  Build inventory',
       running: '⟳  Checking GitHub...',
       again: '↻  Refresh inventory',
@@ -188,13 +192,11 @@
   }
 
   /* ========= Project gallery + eras ========= */
-  const symbols = { bot: '⌘', data: '⋈', scrape: '⌗', message: '✉', database: '▤', telegram: '◈', workflow: '◇', generic: '⟡' };
   const labels = {
-    pt: { bots: 'Bots e assistentes', web: 'Extração de conteúdo', dados: 'Dados e integração', fluxos: 'Automação de rotinas', outros: 'Outros projetos' },
-    en: { bots: 'Bots and assistants', web: 'Content extraction', dados: 'Data and integration', fluxos: 'Workflow automation', outros: 'Other projects' }
+    pt: { bots: 'Bots e assistentes', web: 'Extração de conteúdo', dados: 'Dados e integração', fluxos: 'Automação de rotinas', outros: 'Software' },
+    en: { bots: 'Bots and assistants', web: 'Content extraction', dados: 'Data and integration', fluxos: 'Workflow automation', outros: 'Software' }
   };
   const eraText = { pt: { aplicada: 'Aplicação', academica: 'Faculdade' }, en: { aplicada: 'Applied', academica: 'University' } };
-  const categoryVisuals = { bots: 'bot', web: 'scrape', dados: 'database', fluxos: 'workflow' };
   function element(tag, className, text) {
     const node = document.createElement(tag);
     if (className) node.className = className;
@@ -209,53 +211,70 @@
     const created = formatDate(createdAt);
     const age = Date.now() - dateValue(createdAt);
     const recent = age >= 0 && age < 30 * 86400000;
-    const card = element('article', `project-card${p.feature ? ' is-featured' : ''}${recent ? ' is-recent' : ''}`);
+    const card = element('article', `project-card${p.preview ? ' is-showcase' : ''}`);
+    const content = element('div', 'project-content');
+    card.append(content);
     const top = element('div', 'project-card-top');
     top.append(element('span', 'project-type', (language === 'en' ? p.eyebrow_en : p.eyebrow) || labels[language][p.category]));
     if (recent) top.append(element('span', 'project-new', m().recent));
-    card.append(top);
-    const graphic = element('div', 'project-graphic');
-    graphic.setAttribute('aria-hidden', 'true');
-    graphic.append(element('span', 'project-glyph', symbols[p.visual || categoryVisuals[p.category]] || symbols.generic));
-    card.append(graphic);
+    content.append(top, element('h3', null, p.title));
     if (p.era || p.context) {
       const strip = element('div', 'project-era-line');
       if (p.era) strip.append(element('span', 'project-era-pill', eraText[language][p.era]));
       if (p.context) strip.append(element('span', 'project-context', language === 'en' ? p.context_en || p.context : p.context));
-      card.append(strip);
+      content.append(strip);
     }
-    card.append(element('h3', null, p.title));
-    card.append(element('p', null, projectDescription(p)));
+    content.append(element('p', 'project-summary', projectDescription(p)));
+    const steps = language === 'en' ? p.workflow_en : p.workflow;
+    if (steps?.length) {
+      const stepsLabel = element('h4', 'project-flow-label', m().workflow);
+      const flow = element('ol', 'project-flow');
+      steps.forEach(step => flow.append(element('li', null, step)));
+      content.append(stepsLabel, flow);
+    }
     if (p.tags?.length) {
       const tags = element('div', 'project-tags');
-      p.tags.slice(0, 4).forEach(tag => tags.append(element('span', null, tag)));
-      card.append(tags);
+      p.tags.slice(0, 5).forEach(tag => tags.append(element('span', null, tag)));
+      content.append(tags);
     }
     if (created) {
       const date = element('div', 'project-created');
       const time = element('time', null, created);
       time.dateTime = createdAt;
       date.append(`${m().createdLabel} `, time);
-      card.append(date);
+      content.append(date);
     }
     const actions = element('div', 'project-card-actions');
-    const link = element('a', 'project-card-link');
-    link.href = p.url;
-    link.target = '_blank'; link.rel = 'noopener noreferrer';
-    link.setAttribute('aria-label', m().linkLabel(p.title));
-    link.textContent = m().repoLink;
-    actions.append(link);
-    if (p.release) {
-      const release = element('a', 'project-release', m().release);
-      release.href = p.release;
-      release.target = '_blank'; release.rel = 'noopener noreferrer';
-      actions.append(release);
+    for (const [url, label, style] of [
+      [p.release, m().release, 'project-release'],
+      [p.demo, m().demo, 'project-demo'],
+      [p.url, m().repoLink, 'project-card-link']
+    ]) {
+      if (!url) continue;
+      const link = element('a', style, label);
+      link.href = url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      actions.append(link);
     }
-    card.append(actions);
+    const link = actions.querySelector('.project-card-link');
+    link.setAttribute('aria-label', m().linkLabel(p.title));
+    content.append(actions);
+    if (p.preview) {
+      const figure = element('figure', 'project-preview');
+      const image = element('img');
+      image.src = p.preview;
+      image.alt = m().previewAlt;
+      image.width = 1150;
+      image.height = 1303;
+      image.loading = 'lazy';
+      image.decoding = 'async';
+      figure.append(image, element('figcaption', null, m().previewCaption));
+      card.append(figure);
+    }
     return card;
   }
   function matchesSelection(project) {
-    if (activeEra !== 'ambas' && (project.era || 'github') !== activeEra) return false;
     if (activeFilter !== 'todos' && project.category !== activeFilter) return false;
     if (!searchTerm) return true;
     const searchable = [
@@ -285,17 +304,11 @@
       $$('.filter').forEach(el => { const on = el === button; el.classList.toggle('active', on); el.setAttribute('aria-pressed', String(on)); });
       updateProjects();
     }));
-    $$('.era-button').forEach(button => button.addEventListener('click', () => {
-      activeEra = button.dataset.eraFilter;
-      $$('.era-button').forEach(el => { const on = el === button; el.classList.toggle('active', on); el.setAttribute('aria-pressed', String(on)); });
-      updateProjects();
-    }));
     $('#projectSearch').addEventListener('input', event => { searchTerm = event.target.value.trim(); updateProjects(); });
     $('#projectSort').addEventListener('change', event => { activeSort = event.target.value; updateProjects(); });
     $('#resetFilters').addEventListener('click', () => {
       searchTerm = '';
       $('#projectSearch').value = '';
-      $('.era-button[data-era-filter="ambas"]').click();
       $('.filter[data-filter="todos"]').click();
       $('#projectSearch').focus();
     });

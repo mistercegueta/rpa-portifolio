@@ -13,32 +13,46 @@ function repository(owner, name, overrides = {}) {
   return { owner, name, private: false, created_at: '2023-01-16T14:00:00Z', updated_at: '2026-11-19T22:10:00Z', ...overrides };
 }
 
-test('a new repo with no description is discovered and ordered by creation date', () => {
+const published = { topics: ['portfolio'], description: 'Projeto independente com documentação.' };
+
+test('a selected new repository is discovered and ordered by creation date', () => {
   const result = buildProjects(config, [
     repository('BrandonSaraiva', 'Bot-Faz-Tudo'),
-    repository('mistercegueta', 'projeto-novo', { created_at: '2026-11-19T16:00:00Z', updated_at: '2026-11-19T17:00:00Z' }),
-    repository('BrandonSaraiva', 'projeto-novo'),
+    repository('mistercegueta', 'projeto-novo', { ...published, created_at: '2026-11-19T16:00:00Z', updated_at: '2026-11-19T17:00:00Z' }),
+    repository('BrandonSaraiva', 'projeto-novo', published),
   ]);
   assert.equal(result.length, 3);
   assert.equal(result[0].url, 'https://github.com/mistercegueta/projeto-novo');
   assert.equal(result[0].category, 'outros');
   assert.equal(result[0].era, undefined);
+  assert.deepEqual(result[0].tags, []);
   assert.equal(result[0].meta.created_at, '2026-11-19T16:00:00Z');
   assert.equal(result.find(project => project.repo === 'Bot-Faz-Tudo').era, 'academica');
 });
 
 test('qualified exclusions, forks, private and archived repos stay out', () => {
   const result = buildProjects(config, [
-    repository('BrandonSaraiva', 'lattes', { private: true }),
-    repository('BrandonSaraiva', 'Site-Cartoes'),
-    repository('mistercegueta', 'Site-Cartoes'),
-    repository('mistercegueta', 'fork', { fork: true }),
-    repository('mistercegueta', 'archived', { archived: true }),
-    repository('mistercegueta', 'disabled', { disabled: true }),
-    repository('mistercegueta', 'omit', { topics: ['portfolio-ignore'] }),
-    repository('different-owner', 'public')
+    repository('BrandonSaraiva', 'lattes', { ...published, private: true }),
+    repository('BrandonSaraiva', 'Site-Cartoes', published),
+    repository('mistercegueta', 'Site-Cartoes', published),
+    repository('mistercegueta', 'fork', { ...published, fork: true }),
+    repository('mistercegueta', 'archived', { ...published, archived: true }),
+    repository('mistercegueta', 'disabled', { ...published, disabled: true }),
+    repository('mistercegueta', 'omit', { ...published, topics: ['portfolio', 'portfolio-ignore'] }),
+    repository('different-owner', 'public', published)
   ]);
   assert.deepEqual(result.map(item => item.url), ['https://github.com/mistercegueta/Site-Cartoes']);
+});
+
+test('automatic sync keeps unselected experiments and explicitly excluded projects out', () => {
+  const result = buildProjects(config, [
+    repository('BrandonSaraiva', 'java_csv_downloader', published),
+    repository('BrandonSaraiva', 'projeto-ola-mundo', published),
+    repository('BrandonSaraiva', 'html-novo', published),
+    repository('BrandonSaraiva', 'experiment', { description: 'Automação de tarefas em Python com Selenium.' }),
+    repository('BrandonSaraiva', 'without-description', { ...published, description: '  ' })
+  ]);
+  assert.deepEqual(result, []);
 });
 
 test('lists both owners, follows pagination and rejects nonpublic API rows', async () => {
@@ -76,6 +90,7 @@ test('a rate-limited account does not replace the full catalog with partial resu
 test('a Portuguese description with automação is classified without curation', () => {
   const [radar] = buildProjects({ ...config, curatedProjects: [] }, [
     repository('BrandonSaraiva', 'Dou-e-Concursos', {
+      ...published,
       created_at: '2026-11-19T16:45:24Z',
       description: 'Automação para pesquisar nome do usuário no DOU e concursos nacionais e estaduais'
     })

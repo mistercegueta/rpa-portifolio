@@ -2,9 +2,11 @@
 
 [Abrir o portfólio](https://mistercegueta.github.io/rpa-portifolio/)
 
-O site consulta automaticamente os repositórios públicos de `BrandonSaraiva` e `mistercegueta` ao abrir. O botão **Sincronizar** consulta novamente. Os cards são ordenados pela data de criação no GitHub, com opção de mudar a ordem na vitrine.
+O site consulta automaticamente os repositórios públicos de `BrandonSaraiva` e `mistercegueta` ao abrir. O botão **Sincronizar** consulta novamente. Os cards são ordenados por data de criação no GitHub.
 
-Repositórios sem descrição ou tópicos entram em **Outros** quando os metadados não permitem identificar a finalidade. O arquivo `js/projects.js` guarda a curadoria e as exclusões explícitas. Forks, repositórios arquivados e repositórios com o tópico `portfolio-ignore` ficam fora.
+A vitrine reúne os trabalhos escolhidos em `js/projects.js`. Para publicar um projeto novo sem editar o site, preencha a descrição do repositório e adicione o tópico `portfolio` em **About → Topics** no GitHub. O projeto entra na próxima consulta. Use `portfolio-ignore` para ocultar um repositório público. Forks, projetos arquivados e itens na lista de exclusão ficam fora.
+
+A captura do Radar no Telegram vem da [demonstração pública do projeto](https://github.com/BrandonSaraiva/Dou-e-Concursos/blob/main/docs/DEMONSTRACAO.md), com o nome monitorado oculto.
 
 O GitHub Actions consulta a API a cada três horas e publica uma cópia do catálogo no repositório quando os dados mudam. Se a consulta direta falhar, o site usa a cópia mais recente disponível. O inventário em CSV inclui as datas de criação, atualização e último push em colunas próprias.
 

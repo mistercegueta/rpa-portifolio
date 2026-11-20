@@ -126,25 +126,25 @@ const checkSubset = (value, expected) => {
   assert.ok(value.bars.every(x => x.count <= expected));
 };
 
-test('all charts use the seven curated repositories initially', () => {
+test('all charts use the five curated repositories initially', () => {
   const app = createApp();
   app.load(oldLabels);
-  checkSubset(app.selected(), 7);
-  assert.match(app.selected().summary, /7 de 7/);
+  checkSubset(app.selected(), 5);
+  assert.match(app.selected().summary, /5 de 5/);
 });
 
-test('searching web scraping consistently selects only 2 repositories', () => {
+test('searching Selenium consistently selects only 2 repositories', () => {
   const app = createApp();
   app.load(oldLabels);
   const input = app.get('insightSearch');
-  input.value = 'Web scraping';
+  input.value = 'Selenium';
   input.fire('input');
   const result = app.selected();
   checkSubset(result, 2);
-  assert.deepEqual(result.repos, ['Threads Scraper', 'Tokinho • Telegram Bot']);
+  assert.deepEqual(result.repos, ['Data Science Bot', 'Threads Scraper']);
   assert.equal(result.bars.find(x => x.name === 'Python').count, 2);
-  assert.equal(result.bars.find(x => x.name === 'Web scraping').count, 2);
-  assert.match(result.summary, /2 de 7/);
+  assert.equal(result.bars.find(x => x.name === 'Selenium').count, 2);
+  assert.match(result.summary, /2 de 5/);
 });
 
 test('project type is distinct from techniques and filters every chart', () => {
@@ -168,21 +168,21 @@ test('category ring always represents types, project names are nested', () => {
   const app = createApp();
   app.load(oldLabels);
   const category = app.get('insightCategory');
-  category.value = 'bots';
+  category.value = 'dados';
   category.fire('change');
   const result = app.selected();
-  checkSubset(result, 3);
+  checkSubset(result, 2);
   const projects = result.legend.filter(x => x.className === 'insight-project-item');
-  assert.equal(projects.length, 3);
+  assert.equal(projects.length, 2);
   assert.equal(result.legend.filter(x => x.className === 'insight-legend-item').length, 1);
-  assert.match(app.get('insightDonut').style.background, /#a58bff/);
+  assert.match(app.get('insightDonut').style.background, /#ecacff/);
   assert.doesNotMatch(app.get('insightDonut').style.background, /#69efce/);
 });
 
 test('new exported project type names remain recognized', () => {
   const app = createApp();
   app.load(newLabels);
-  checkSubset(app.selected(), 7);
+  checkSubset(app.selected(), 5);
   assert.equal(app.get('insightMetricApi').textContent, '4');
 });
 
@@ -193,7 +193,7 @@ test('no matches shows zero everywhere rather than old values', () => {
   input.value = 'nonexistent-product-xyz';
   input.fire('input');
   checkSubset(app.selected(), 0);
-  assert.match(app.selected().summary, /0 de 7/);
+  assert.match(app.selected().summary, /0 de 5/);
 });
 
 test('required element ids exist in the HTML and visualizations do not ignore filters', () => {

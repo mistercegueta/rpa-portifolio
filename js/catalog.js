@@ -7,6 +7,9 @@
   const newestFirst = (a, b) => dateValue(b.meta?.created_at) - dateValue(a.meta?.created_at) || a.title.localeCompare(b.title);
   const repoKey = (owner, name) => `${owner}/${name}`.toLowerCase();
   const topicsFor = repo => Array.isArray(repo.topics) ? repo.topics.filter(topic => typeof topic === 'string') : [];
+  const curatedByRepository = config => new Map(config.curatedProjects.map(
+    project => [new URL(project.url).pathname.slice(1).toLowerCase(), project]
+  ));
 
   async function listPublicRepositories(accounts, { fetcher = fetch, signal, token } = {}) {
     const headers = { Accept: 'application/vnd.github+json' };
@@ -58,21 +61,25 @@
   function eligibleRepositories(config, repositories) {
     const accounts = new Set(config.githubAccounts.map(normalize));
     const excluded = new Set(config.excludedRepositories.map(normalize));
+    const curated = curatedByRepository(config);
     const eligible = new Map();
     for (const repo of repositories) {
       if (!repo || !accounts.has(normalize(repo.owner)) || repo.private !== false || repo.fork || repo.archived || repo.disabled) continue;
-      if (typeof repo.name !== 'string' || !/^[\w.-]+$/.test(repo.name) || topicsFor(repo).includes('portfolio-ignore')) continue;
+      if (typeof repo.name !== 'string' || !/^[\w.-]+$/.test(repo.name)) continue;
+      const topics = topicsFor(repo);
       const key = repoKey(repo.owner, repo.name);
-      if (!excluded.has(key)) eligible.set(key, repo);
+      if (excluded.has(key) || topics.includes('portfolio-ignore')) continue;
+      const optedIn = topics.includes(config.publishTopic) && typeof repo.description === 'string' && repo.description.trim();
+      if (curated.has(key) || optedIn) eligible.set(key, repo);
     }
     return [...eligible.values()];
   }
 
   function buildProjects(config, repositories) {
-    const curated = new Map(config.curatedProjects.map(project => [new URL(project.url).pathname.slice(1).toLowerCase(), project]));
+    const curated = curatedByRepository(config);
     return eligibleRepositories(config, repositories).map(repo => {
       const editorial = curated.get(repoKey(repo.owner, repo.name));
-      const topics = topicsFor(repo);
+      const topics = topicsFor(repo).filter(topic => topic !== config.publishTopic);
       const originalDescription = repo.description || '';
       const tags = [repo.language, ...topics].filter(Boolean);
       const title = repo.name.replace(/[-_]+/g, ' ').replace(/\b[a-z]/g, char => char.toUpperCase());
